@@ -24,158 +24,153 @@ import binary
 import serial.device as serial
 import serial.registers as registers
 
+  // Attempting to build class to handle more than one device.  In cases where two are used, will allow one query to handle all devices which will be much harder without.
 
-DEFAULT-I2C-ADDRESS                     ::= 0x005a
-DEFAULT-I2C-ADDRESS-TOUCH               ::= 0x005c
-I2C-ADDRESS-5B                          ::= 0x005b
-I2C-ADDRESS-5D                          ::= 0x005d
+class Mpr121:
+  // PUBLIC
+  static DEVICE_COUNT_MAX_                       ::= 4  // implied given the address limitation
+
+  // Device can be configured between 0x58 and 0x5d
+  static PHYSICAL_CHANNELS_PER_DEVICE_           ::= 12
+  static CHANNELS_PER_DEVICE_                    ::= 13
+
+  static I2C-ADDRESS                             ::= 0x5a
+  static I2C-ADDRESS-TOUCH                       ::= 0x5c
+  static I2C-ADDRESS-5B                          ::= 0x5b
+  static I2C-ADDRESS-5D                          ::= 0x5d
  
-MPR121-PROXIMITY-MODE-DISABLED          := 0    // default set by this driver
-MPR121-PROXIMITY-MODE-COMBINE_0_TO_1    := 1
-MPR121-PROXIMITY-MODE-COMBINE_0_TO_3    := 2
-MPR121-PROXIMITY-MODE-COMBINE_0_TO_11   := 3
+  static PROXIMITY-MODE-DISABLED                 := 0    // default set by this driver
+  static PROXIMITY-MODE-COMBINE_0_TO_1           := 1
+  static PROXIMITY-MODE-COMBINE_0_TO_3           := 2
+  static PROXIMITY-MODE-COMBINE_0_TO_11          := 3
 
-MPR121-BASELINE-TRACKING-DISABLED       := 0x01
-MPR121-BASELINE-TRACKING-INIT-0         := 0x00 // default in chipset
-MPR121-BASELINE-TRACKING-INIT-5BIT      := 0x02
-MPR121-BASELINE-TRACKING-INIT-10BIT     := 0x03
+  static BASELINE-TRACKING-DISABLED              := 0x01
+  static BASELINE-TRACKING-INIT-0                := 0x00 // default in chipset
+  static BASELINE-TRACKING-INIT-5BIT             := 0x02
+  static BASELINE-TRACKING-INIT-10BIT            := 0x03
 
-MPR121-CHARGE_DISCHARGE_TIME_DISABLED   := 0x00
-MPR121-CHARGE_DISCHARGE_TIME_HALF_US    := 0x01 // default
-MPR121-CHARGE_DISCHARGE_TIME_1US        := 0x02
-MPR121-CHARGE_DISCHARGE_TIME_2US        := 0x03
-MPR121-CHARGE_DISCHARGE_TIME_4US        := 0x04
-MPR121-CHARGE_DISCHARGE_TIME_8US        := 0x05
-MPR121-CHARGE_DISCHARGE_TIME_16US       := 0x06
-MPR121-CHARGE_DISCHARGE_TIME_32US       := 0x07
+  static CHARGE_DISCHARGE_TIME_DISABLED          := 0x00
+  static CHARGE_DISCHARGE_TIME_HALF_US           := 0x01 // default
+  static CHARGE_DISCHARGE_TIME_1US               := 0x02
+  static CHARGE_DISCHARGE_TIME_2US               := 0x03
+  static CHARGE_DISCHARGE_TIME_4US               := 0x04
+  static CHARGE_DISCHARGE_TIME_8US               := 0x05
+  static CHARGE_DISCHARGE_TIME_16US              := 0x06
+  static CHARGE_DISCHARGE_TIME_32US              := 0x07
 
-MPR121-FIRST_FILTER_ITERATIONS_6        := 0x00 // default
-MPR121-FIRST_FILTER_ITERATIONS_10       := 0x01
-MPR121-FIRST_FILTER_ITERATIONS_18       := 0x02
-MPR121-FIRST_FILTER_ITERATIONS_34       := 0x03
+  static FIRST_FILTER_ITERATIONS_6               := 0x00 // default
+  static FIRST_FILTER_ITERATIONS_10              := 0x01
+  static FIRST_FILTER_ITERATIONS_18              := 0x02
+  static FIRST_FILTER_ITERATIONS_34              := 0x03
 
-MPR121-SECOND_FILTER_ITERATIONS_4       := 0x00 // default
-MPR121-SECOND_FILTER_ITERATIONS_6       := 0x01
-MPR121-SECOND_FILTER_ITERATIONS_10      := 0x02
-MPR121-SECOND_FILTER_ITERATIONS_18      := 0x03
+  static SECOND_FILTER_ITERATIONS_4              := 0x00 // default
+  static SECOND_FILTER_ITERATIONS_6              := 0x01
+  static SECOND_FILTER_ITERATIONS_10             := 0x02
+  static SECOND_FILTER_ITERATIONS_18             := 0x03
 
 /** Sample periods of the MPR121 - the time between capacitive readings. 
     Higher values consume less power, but are less responsive. */
-MPR121-SAMPLE_PERIOD_1MS                := 0x00
-MPR121-SAMPLE_PERIOD_2MS                := 0x01
-MPR121-SAMPLE_PERIOD_4MS                := 0x02
-MPR121-SAMPLE_PERIOD_8MS                := 0x03
-MPR121-SAMPLE_PERIOD_16MS               := 0x04 // default
-MPR121-SAMPLE_PERIOD_32MS               := 0x05
-MPR121-SAMPLE_PERIOD_64MS               := 0x06
-MPR121-SAMPLE_PERIOD_128MS              := 0x07
-
-
-class Driver:
-  // PUBLIC
-  static DEVICE_COUNT_MAX_              ::= 4  // implied given the address limitation
-
-  // Device can be configured between 0x58 and 0x5d
-  static DEFAULT-I2C-ADDRESS            ::= 0x005a
-  static DEFAULT-I2C-ADDRESS-TOUCH      ::= 0x005c
-  static I2C-ADDRESS-5B                 ::= 0x005b
-  static I2C-ADDRESS-5D                 ::= 0x005d
-  static PHYSICAL_CHANNELS_PER_DEVICE_  ::= 12
-  static CHANNELS_PER_DEVICE_           ::= 13
-  // Attempting to build class to handle more than one device.  In cases where two are used, will allow one query to handle all devices which will be much harder without.
+  static SAMPLE_PERIOD_1MS                       := 0x00
+  static SAMPLE_PERIOD_2MS                       := 0x01
+  static SAMPLE_PERIOD_4MS                       := 0x02
+  static SAMPLE_PERIOD_8MS                       := 0x03
+  static SAMPLE_PERIOD_16MS                      := 0x04 // default
+  static SAMPLE_PERIOD_32MS                      := 0x05
+  static SAMPLE_PERIOD_64MS                      := 0x06
+  static SAMPLE_PERIOD_128MS                     := 0x07
 
   // register addresses
-  TOUCH-STATUS-REGISTER-ADDRESS_        := 0x00  // Low, high = 0x01
-  OUT-OF-RANGE-STATUS-REGISTER-ADDRESS_ := 0x02
-  FILTERED-DATA0-REGISTER-ADDRESS_      := 0x04  // Low, high = 0x05
-  BASELINE-DATA0-REGISTER-ADDRESS_      := 0x1E
+  static TOUCH-STATUS-REGISTER-ADDRESS_          := 0x00  // Low, high = 0x01
+  static OUT-OF-RANGE-STATUS-REGISTER-ADDRESS_   := 0x02
+  static FILTERED-DATA0-REGISTER-ADDRESS_        := 0x04  // Low, high = 0x05
+  static BASELINE-DATA0-REGISTER-ADDRESS_        := 0x1E
 
   // general electrode touch sense baseline filters
   // rising filter
-  static MHDR-REGISTER-ADDRESS_         ::= 0x2B
-  static NHDR-REGISTER-ADDRESS_         ::= 0x2C
-  static NCLR-REGISTER-ADDRESS_         ::= 0x2D
-  static FDLR-REGISTER-ADDRESS_         ::= 0x2E
+  static MHDR-REGISTER-ADDRESS_                  ::= 0x2B
+  static NHDR-REGISTER-ADDRESS_                  ::= 0x2C
+  static NCLR-REGISTER-ADDRESS_                  ::= 0x2D
+  static FDLR-REGISTER-ADDRESS_                  ::= 0x2E
 
   // falling filter
-  static MHDF-REGISTER-ADDRESS_         ::= 0x2F
-  static NHDF-REGISTER-ADDRESS_         ::= 0x30
-  static NCLF-REGISTER-ADDRESS_         ::= 0x31
-  static FDLF-REGISTER-ADDRESS_         ::= 0x32
+  static MHDF-REGISTER-ADDRESS_                  ::= 0x2F
+  static NHDF-REGISTER-ADDRESS_                  ::= 0x30
+  static NCLF-REGISTER-ADDRESS_                  ::= 0x31
+  static FDLF-REGISTER-ADDRESS_                  ::= 0x32
 
   // touched filter
-  static NHDT-REGISTER-ADDRESS_         ::= 0x33
-  static NCLT-REGISTER-ADDRESS_         ::= 0x34
-  static FDLT-REGISTER-ADDRESS_         ::= 0x35
+  static NHDT-REGISTER-ADDRESS_                  ::= 0x33
+  static NCLT-REGISTER-ADDRESS_                  ::= 0x34
+  static FDLT-REGISTER-ADDRESS_                  ::= 0x35
 
   // proximity electrode touch sense baseline filters
   // rising filter
-  static MHDPROXR-REGISTER-ADDRESS_     ::= 0x36
-  static NHDPROXR-REGISTER-ADDRESS_     ::= 0x37
-  static NCLPROXR-REGISTER-ADDRESS_     ::= 0x38
-  static FDLPROXR-REGISTER-ADDRESS_     ::= 0x39
+  static MHDPROXR-REGISTER-ADDRESS_              ::= 0x36
+  static NHDPROXR-REGISTER-ADDRESS_              ::= 0x37
+  static NCLPROXR-REGISTER-ADDRESS_              ::= 0x38
+  static FDLPROXR-REGISTER-ADDRESS_              ::= 0x39
 
   // falling filter
-  static MHDPROXF-REGISTER-ADDRESS_     ::= 0x3A
-  static NHDPROXF-REGISTER-ADDRESS_     ::= 0x3B
-  static NCLPROXF-REGISTER-ADDRESS_     ::= 0x3C
-  static FDLPROXF-REGISTER-ADDRESS_     ::= 0x3D
+  static MHDPROXF-REGISTER-ADDRESS_              ::= 0x3A
+  static NHDPROXF-REGISTER-ADDRESS_              ::= 0x3B
+  static NCLPROXF-REGISTER-ADDRESS_              ::= 0x3C
+  static FDLPROXF-REGISTER-ADDRESS_              ::= 0x3D
 
   // touched filter
-  static NHDPROXT-REGISTER-ADDRESS_     ::= 0x3E
-  static NCLPROXT-REGISTER-ADDRESS_     ::= 0x3F
-  static FDLPROXT-REGISTER-ADDRESS_     ::= 0x40
+  static NHDPROXT-REGISTER-ADDRESS_              ::= 0x3E
+  static NCLPROXT-REGISTER-ADDRESS_              ::= 0x3F
+  static FDLPROXT-REGISTER-ADDRESS_              ::= 0x40
 
   // electrode touch and release thresholds
-  static TOUCH-THRESHOLD0-REGISTER-ADDRESS_    ::= 0x41
-  static RELEASE-THRESHOLD0-REGISTER-ADDRESS_  ::= 0x42
-  static TOUCH-THRESHOLD-DEFAULT_              ::= 40
-  static RELEASE-THRESHOLD-DEFAULT_            ::= 20
+  static TOUCH-THRESHOLD0-REGISTER-ADDRESS_      ::= 0x41
+  static RELEASE-THRESHOLD0-REGISTER-ADDRESS_    ::= 0x42
+  static TOUCH-THRESHOLD-DEFAULT_                ::= 40
+  static RELEASE-THRESHOLD-DEFAULT_              ::= 20
 
   // debounce settings
-  static DEBOUNCE-REGISTER-ADDRESS_            ::= 0x5B
-  static DEBOUNCE-REGISTER-RELEASE-MASK_       ::= 0b0111_0000
-  static DEBOUNCE-REGISTER-RELEASE-OFFSET_     ::= 4
-  static DEBOUNCE-REGISTER-TOUCH-MASK_         ::= 0b0000_0111
-  static DEBOUNCE-REGISTER-TOUCH-OFFSET_       ::= 0
+  static DEBOUNCE-REGISTER-ADDRESS_              ::= 0x5B
+  static DEBOUNCE-REGISTER-RELEASE-MASK_         ::= 0b0111_0000
+  static DEBOUNCE-REGISTER-RELEASE-OFFSET_       ::= 4
+  static DEBOUNCE-REGISTER-TOUCH-MASK_           ::= 0b0000_0111
+  static DEBOUNCE-REGISTER-TOUCH-OFFSET_         ::= 0
 
   // channel charge-discharge CURRENTS
-  static CDC0-REGISTER-ADDRESS_                ::= 0x5F
-  static CHARGE-DISCHARGE-CURRENT-MIN_         ::= 0     // 0 = defer to global
-  static CHARGE-DISCHARGE-CURRENT-MAX_         ::= 63
+  static CDC0-REGISTER-ADDRESS_                  ::= 0x5F
+  static CHARGE-DISCHARGE-CURRENT-MIN_           ::= 0     // 0 = defer to global
+  static CHARGE-DISCHARGE-CURRENT-MAX_           ::= 63
 
   // channel charge-discharge TIMES
-  static CDT0-REGISTER-ADDRESS_                ::= 0x6C
-  static CDT-CHARGE-TIME-MASK_                 ::= 0x07
-  static CDT-FIELD-DIVISOR_                    ::= 2
-  static CDT-FIELD-OFFSET_                     ::= 4
+  static CDT0-REGISTER-ADDRESS_                  ::= 0x6C
+  static CDT-CHARGE-TIME-MASK_                   ::= 0x07
+  static CDT-FIELD-DIVISOR_                      ::= 2
+  static CDT-FIELD-OFFSET_                       ::= 4
 
   // GPIO
-  static GPIO-CTL0-REGISTER-ADDRESS_           ::= 0x73
-  static GPIO-CTL1-REGISTER-ADDRESS_           ::= 0x74
-  static GPIO-DAT-REGISTER-ADDRESS_            ::= 0x75
-  static GPIO-DIR-REGISTER-ADDRESS_            ::= 0x76
-  static GPIO-EN-REGISTER-ADDRESS_             ::= 0x77
-  static GPIO-SET-REGISTER-ADDRESS_            ::= 0x78
-  static GPIO-CLR-REGISTER-ADDRESS_            ::= 0x79
-  static GPIO-TOG-REGISTER-ADDRESS_            ::= 0x7A
+  static GPIO-CTL0-REGISTER-ADDRESS_             ::= 0x73
+  static GPIO-CTL1-REGISTER-ADDRESS_             ::= 0x74
+  static GPIO-DAT-REGISTER-ADDRESS_              ::= 0x75
+  static GPIO-DIR-REGISTER-ADDRESS_              ::= 0x76
+  static GPIO-EN-REGISTER-ADDRESS_               ::= 0x77
+  static GPIO-SET-REGISTER-ADDRESS_              ::= 0x78
+  static GPIO-CLR-REGISTER-ADDRESS_              ::= 0x79
+  static GPIO-TOG-REGISTER-ADDRESS_              ::= 0x7A
 
   // Configuration registers
-  static FILTER-GLOBAL-CDC-REGISTER-ADDRESS_   ::= 0x5C
-  static FILTER-GLOBAL-CDC-REGISTER-DEFAULT_   ::= 0b0001_0000
-  static FILTER-GLOBAL-CDT-REGISTER-ADDRESS_   ::= 0x5D
-  static FILTER-GLOBAL-CDT-REGISTER-DEFAULT_   ::= 0b0010_0100
+  static FILTER-GLOBAL-CDC-REGISTER-ADDRESS_     ::= 0x5C
+  static FILTER-GLOBAL-CDC-REGISTER-DEFAULT_     ::= 0b0001_0000
+  static FILTER-GLOBAL-CDT-REGISTER-ADDRESS_     ::= 0x5D
+  static FILTER-GLOBAL-CDT-REGISTER-DEFAULT_     ::= 0b0010_0100
 
   //auto-config
-  static ACCR0-REGISTER-ADDRESS_               ::= 0x7B
-  static ACCR1-REGISTER-ADDRESS_               ::= 0x7C
-  static USL-REGISTER-ADDRESS_                 ::= 0x7D  // Upper Limit
-  static LSL-REGISTER-ADDRESS_                 ::= 0x7E  // Lower Limit
-  static TL-REGISTER-ADDRESS_                  ::= 0x7F  // Target Limit
+  static ACCR0-REGISTER-ADDRESS_                 ::= 0x7B
+  static ACCR1-REGISTER-ADDRESS_                 ::= 0x7C
+  static USL-REGISTER-ADDRESS_                   ::= 0x7D  // Upper Limit
+  static LSL-REGISTER-ADDRESS_                   ::= 0x7E  // Lower Limit
+  static TL-REGISTER-ADDRESS_                    ::= 0x7F  // Target Limit
 
   //soft reset
-  static SOFT-RESET-REGISTER-ADDRESS_          ::= 0x80
-  static SOFT-RESET-VALUE_                     ::= 0x63
+  static SOFT-RESET-REGISTER-ADDRESS_            ::= 0x80
+  static SOFT-RESET-VALUE_                       ::= 0x63
 
   //PWM
   //static PWM0_                                 ::= 0x81
@@ -184,28 +179,28 @@ class Driver:
   //static PWM3_                                 ::= 0x84
 
   //ECR 
-  static ECR-REGISTER-ADDRESS_                  ::= 0x5E
-  static ECR-ELECTRODE-MASK_                    ::= 0b0000_1111
-  static ECR-ELECTRODE-OFFSET_                  ::= 0
-  static ECR-PROXIMITY-MASK_                    ::= 0b0011_0000
-  static ECR-PROXIMITY-OFFSET_                  ::= 4
-  static ECR-CONFIGURATION-LOCK-MASK_           ::= 0b1100_0000
-  static ECR-CONFIGURATION-LOCK-OFFSET_         ::= 6
+  static ECR-REGISTER-ADDRESS_                   ::= 0x5E
+  static ECR-ELECTRODE-MASK_                     ::= 0b0000_1111
+  static ECR-ELECTRODE-OFFSET_                   ::= 0
+  static ECR-PROXIMITY-MASK_                     ::= 0b0011_0000
+  static ECR-PROXIMITY-OFFSET_                   ::= 4
+  static ECR-CONFIGURATION-LOCK-MASK_            ::= 0b1100_0000
+  static ECR-CONFIGURATION-LOCK-OFFSET_          ::= 6
 
-  static DEVICE-INDEX-NONE_                     ::= -1
-  static BASELINE-DATA-BIT-SHIFT_               ::= 2
+  static DEVICE-INDEX-NONE_                      ::= -1
+  static BASELINE-DATA-BIT-SHIFT_                ::= 2
 
   //Something funky here:
-  static BITS-PER-BYTE                         ::= 8
-  static BITS-PER-TWO-BYTES                    ::= 16
-  static ONE-BYTE-MAX                          ::= 0xFF
-  static TWO-BYTE-MAX                          ::= 0xFFFF
+  static BITS-PER-BYTE                           ::= 8
+  static BITS-PER-TWO-BYTES                      ::= 16
+  static ONE-BYTE-MAX                            ::= 0xFF
+  static TWO-BYTE-MAX                            ::= 0xFFFF
 
   //Other Statics
-  static OVER-CURRENT-REXT_                    ::= 0b1000_0000_0000_0000
-  static TOUCH-STATUS-MASK-BASE_               ::= 0x1FFF
-  static OUT-OF-RANGE-STATUS-ACFF_             ::= 0x8000
-  static OUT-OF-RANGE-STATUS-ARFF_             ::= 0x4000
+  static OVER-CURRENT-REXT_                      ::= 0b1000_0000_0000_0000
+  static TOUCH-STATUS-MASK-BASE_                 ::= 0x1FFF
+  static OUT-OF-RANGE-STATUS-ACFF_               ::= 0x8000
+  static OUT-OF-RANGE-STATUS-ARFF_               ::= 0x4000
 
 
   // Baseline Configuration
@@ -247,8 +242,8 @@ class Driver:
   tasks_/Map                 := {:}
 
   /** Class Constructor: Always constructs with 1 device, but others can be added */
-  constructor device/serial.Device --identifier=DEFAULT-I2C-ADDRESS --logger/log.Logger=(log.default.with-name "mpr121"):
-    devices_[DEFAULT-I2C-ADDRESS] = device.registers
+  constructor device/serial.Device --identifier=I2C-ADDRESS --logger/log.Logger=(log.default.with-name "mpr121"):
+    devices_[I2C-ADDRESS] = device.registers
     logger_ = logger
     touch-status-mask_ = TOUCH-STATUS-MASK-BASE_
     initialise-device_
@@ -297,8 +292,8 @@ class Driver:
     logger_.debug "initialise-device_: Wrote ECR-REGISTER-ADDRESS_[$(%02x identifier)] with  0x$(%02x initial-ecr-setting) [$(bits-16 initial-ecr-setting)]"
 
     // Testing
-    read-afe1-register --identifier=identifier
-    read-afe2-register --identifier=identifier
+    show-afe1-register --identifier=identifier
+    show-afe2-register --identifier=identifier
 
   /** touch-pins-enabled: sets the number of touch pins enabled
       Must be set as a group, a number of consecutive pins from pin 0.  Cannot enable/disable them individually.
@@ -332,20 +327,20 @@ class Driver:
       */
   set-thresholds --identifier --channel --touch -> none:
     //devices_[identifier].write-u8 (TOUCH-THRESHOLD0-REGISTER-ADDRESS_ + (2 * channel)) touch
-    write-register-u8 --identifier=identifier --register=(TOUCH-THRESHOLD0-REGISTER-ADDRESS_ + (2 * channel)) --value=touch 
+    write-register-u8_ --identifier=identifier --register=(TOUCH-THRESHOLD0-REGISTER-ADDRESS_ + (2 * channel)) --value=touch 
     //logger_.debug "set-thresholds_: Wrote TOUCH-THRESHOLD0-REGISTER-ADDRESS_   [$(channel)] + $(2 * channel) with 0x$(%04x touch)"
 
   set-thresholds --identifier --channel --release -> none:
     // to do - measure and ensure release is greater than touch
     //devices_[identifier].write-u8 (RELEASE-THRESHOLD0-REGISTER-ADDRESS_ + (2 * channel)) release
-    write-register-u8 --identifier=identifier --register=(RELEASE-THRESHOLD0-REGISTER-ADDRESS_ + (2 * channel)) --value=release
+    write-register-u8_ --identifier=identifier --register=(RELEASE-THRESHOLD0-REGISTER-ADDRESS_ + (2 * channel)) --value=release
     //logger_.debug "set-thresholds_: Wrote RELEASE-THRESHOLD0-REGISTER-ADDRESS_ [$(channel)] + $(2 * channel) with 0x$(%04x release)"
 
   soft-reset -> none:
     devices_.keys.do: soft-reset --identifier=it
 
   soft-reset --identifier -> none:
-    write-register-u8 --identifier=identifier --register=SOFT-RESET-REGISTER-ADDRESS_ --value=SOFT-RESET-VALUE_
+    write-register-u8_ --identifier=identifier --register=SOFT-RESET-REGISTER-ADDRESS_ --value=SOFT-RESET-VALUE_
     logger_.debug "soft-reset: Wrote SOFT-RESET-REGISTER-ADDRESS_ with    0x$(%04x SOFT-RESET-VALUE_) [$(bits-16 SOFT-RESET-VALUE_)]"
     sleep --ms=1
 
@@ -378,29 +373,14 @@ class Driver:
   stop-all-channels_ --identifier -> none:
     value := devices_[identifier].read-u8 ECR-REGISTER-ADDRESS_
     last-ecr-register_[identifier] = value
-    write-register-u8 --identifier=identifier --register=ECR-REGISTER-ADDRESS_ --value=0x0
+    write-register-u8_ --identifier=identifier --register=ECR-REGISTER-ADDRESS_ --value=0x0
 
   start-all-channels_ -> none:
     devices_.keys.do: start-all-channels_ --identifier=it
 
   start-all-channels_ --identifier -> none:
-    write-register-u8 --identifier=identifier --register=ECR-REGISTER-ADDRESS_ --value=last-ecr-register_[identifier] 
+    write-register-u8_ --identifier=identifier --register=ECR-REGISTER-ADDRESS_ --value=last-ecr-register_[identifier] 
     logger_.debug "Write ECR-REGISTER-ADDRESS_ restored to 0x$(%02x last-ecr-register_[identifier] ) [$(bits-16 last-ecr-register_[identifier])]"
-
-  write-register-u8 --identifier --register/int --value/int -> none:
-    // MPR121 must be put in Stop Mode to write to most registers
-    stop_required/bool := true
-    // first get the current set value of the MPR121_ECR register
-    last-ecr-register_[identifier] = devices_[identifier].read-u8 ECR-REGISTER-ADDRESS_
-    if ((register == ECR-REGISTER-ADDRESS_) or ((0x73 <= register) and (register <= 0x7A))):
-      stop_required = false
-    if stop_required:
-      // clear this register to set stop mode
-      devices_[identifier].write-u8 ECR-REGISTER-ADDRESS_ 0x0
-    devices_[identifier].write-u8 register value
-    if stop_required:
-      // write back the previous set ECR settings
-      devices_[identifier].write-u8 ECR-REGISTER-ADDRESS_ last-ecr-register_[identifier]
 
   /** clear-overcurrent-flag:
       When over current detected, the OVCF bit 0b1000_0000 is set on the pin status register, and MPR121 goes to Stop Mode immediately. The ExTS bits in status registers,output registers 0x04~0x2A, and bit D5~D0 in ECR will be also cleared on over current condition. When the bit is “1”, writing ECR register (to try to enter Run mode) will be discarded.
@@ -408,7 +388,7 @@ class Driver:
       */
   clear-overcurrent-flag --identifier -> none:
     devices_[identifier].write-u16-le TOUCH-STATUS-REGISTER-ADDRESS_ OVER-CURRENT-REXT_
-    write-register-u8 --identifier=identifier  --register=TOUCH-STATUS-REGISTER-ADDRESS_ --value=OVER-CURRENT-REXT_
+    write-register-u8_ --identifier=identifier  --register=TOUCH-STATUS-REGISTER-ADDRESS_ --value=OVER-CURRENT-REXT_
 
   // looks like it will set the bit of the channel of the out of range status
   get-out-of-range-status --identifier -> int:
@@ -441,7 +421,7 @@ class Driver:
     new-value/int := old-value
     new-value     &= ~DEBOUNCE-REGISTER-RELEASE-MASK_
     new-value     |= (release << DEBOUNCE-REGISTER-RELEASE-OFFSET_)
-    write-register-u8 --identifier=identifier  --register=DEBOUNCE-REGISTER-ADDRESS_ --value=new-value
+    write-register-u8_ --identifier=identifier  --register=DEBOUNCE-REGISTER-ADDRESS_ --value=new-value
     logger_.debug "set-debounce --release (0x$(%02x identifier)): from=$(bits-16 old-value) to=$(bits-16 new-value)"
 
   set-debounce --identifier --touch/int -> none:
@@ -450,7 +430,7 @@ class Driver:
     new-value/int := old-value
     new-value     &= ~DEBOUNCE-REGISTER-TOUCH-MASK_
     new-value     |= (touch << DEBOUNCE-REGISTER-TOUCH-OFFSET_)
-    write-register-u8 --identifier=identifier  --register=DEBOUNCE-REGISTER-ADDRESS_ --value=new-value
+    write-register-u8_ --identifier=identifier  --register=DEBOUNCE-REGISTER-ADDRESS_ --value=new-value
     logger_.debug "set-debounce --touch   (0x$(%02x identifier)): from=$(bits-16 old-value) to=$(bits-16 new-value)"
 
   /** proximity-mode: set number of channels to used to generate virtual "13th" proximity channel.
@@ -470,7 +450,7 @@ class Driver:
     new-value/int := old-value
     new-value     &= ~ECR-PROXIMITY-MASK_
     new-value     |= (mode << ECR-PROXIMITY-OFFSET_)
-    write-register-u8 --identifier=identifier  --register=ECR-REGISTER-ADDRESS_ --value=new-value
+    write-register-u8_ --identifier=identifier  --register=ECR-REGISTER-ADDRESS_ --value=new-value
     logger_.debug "proximity-mode (0x$(%02x identifier)): from=$(bits-16 old-value) to=$(bits-16 new-value)"
 
   /** configuration-lock:  Sets Configuration Lock register.  Values:
@@ -488,7 +468,7 @@ class Driver:
     new-value/int := old-value
     new-value     &= ~ECR-CONFIGURATION-LOCK-MASK_
     new-value     |= (mode << ECR-CONFIGURATION-LOCK-OFFSET_)
-    write-register-u8 --identifier=identifier  --register=ECR-REGISTER-ADDRESS_ --value=new-value
+    write-register-u8_ --identifier=identifier  --register=ECR-REGISTER-ADDRESS_ --value=new-value
     logger_.debug "configuration-lock (0x$(%02x identifier)): from=$(bits-16 old-value) to=$(bits-16 new-value)"
    
   /** set-autoconfig_: Enable autoconfig option - enable / disable autoconfig.
@@ -519,17 +499,17 @@ class Driver:
       // https://www.nxp.com/docs/en/application-note/AN3889.pdf#page=7&zoom=310,-42,792
       // correct values for Vdd = 3.3V
       //devices_[identifier].write-u8 USL-REGISTER-ADDRESS_ 200                 // ((Vdd - 0.7)/Vdd) * 256
-      write-register-u8 --identifier=identifier --register=USL-REGISTER-ADDRESS_ --value=200     // ((Vdd - 0.7)/Vdd) * 256
+      write-register-u8_ --identifier=identifier --register=USL-REGISTER-ADDRESS_ --value=200     // ((Vdd - 0.7)/Vdd) * 256
       logger_.debug "Wrote USL-REGISTER-ADDRESS_ with    200"
       //devices_[identifier].write-u8 TL-REGISTER-ADDRESS_  180                 // UPLIMIT * 0.9
-      write-register-u8 --identifier=identifier --register=TL-REGISTER-ADDRESS_  --value=180     // UPLIMIT * 0.9
+      write-register-u8_ --identifier=identifier --register=TL-REGISTER-ADDRESS_  --value=180     // UPLIMIT * 0.9
       logger_.debug "Wrote TL-REGISTER-ADDRESS_ with     180"
       //devices_[identifier].write-u8 LSL-REGISTER-ADDRESS_ 130                 // UPLIMIT * 0.65
-      write-register-u8 --identifier=identifier --register=LSL-REGISTER-ADDRESS_ --value=130     // UPLIMIT * 0.65
+      write-register-u8_ --identifier=identifier --register=LSL-REGISTER-ADDRESS_ --value=130     // UPLIMIT * 0.65
       logger_.debug "Wrote LSL-REGISTER-ADDRESS_ with    130"
     else:
       // really only disable ACE.
-      write-register-u8 --identifier=identifier --register=ACCR0-REGISTER-ADDRESS_ --value=0b00001010
+      write-register-u8_ --identifier=identifier --register=ACCR0-REGISTER-ADDRESS_ --value=0b00001010
       logger_.debug "Wrote ACCR0-REGISTER-ADDRESS_ with    0x$(%04x 0b00001010) [$(bits-16 0b00001010)]"
 
   afe1-register-reset -> none:
@@ -537,7 +517,7 @@ class Driver:
 
   afe1-register-reset --identifier -> none:
     value := devices_[identifier].read-u8 FILTER-GLOBAL-CDC-REGISTER-ADDRESS_
-    write-register-u8 --identifier=identifier  --register=FILTER-GLOBAL-CDC-REGISTER-ADDRESS_ --value=FILTER-GLOBAL-CDC-REGISTER-DEFAULT_
+    write-register-u8_ --identifier=identifier  --register=FILTER-GLOBAL-CDC-REGISTER-ADDRESS_ --value=FILTER-GLOBAL-CDC-REGISTER-DEFAULT_
     logger_.debug "afe1-register-reset: (0x$(%02x identifier)): from=$(bits-16 value) to=$(bits-16 FILTER-GLOBAL-CDC-REGISTER-DEFAULT_)"
 
   afe2-register-reset -> none:
@@ -545,7 +525,7 @@ class Driver:
 
   afe2-register-reset --identifier -> none:
     value := devices_[identifier].read-u8 FILTER-GLOBAL-CDT-REGISTER-ADDRESS_
-    write-register-u8 --identifier=identifier  --register=FILTER-GLOBAL-CDT-REGISTER-ADDRESS_ --value=FILTER-GLOBAL-CDT-REGISTER-DEFAULT_
+    write-register-u8_ --identifier=identifier  --register=FILTER-GLOBAL-CDT-REGISTER-ADDRESS_ --value=FILTER-GLOBAL-CDT-REGISTER-DEFAULT_
     logger_.debug "afe2-register-reset: (0x$(%02x identifier)): from=$(bits-16 value) to=$(bits-16 FILTER-GLOBAL-CDT-REGISTER-DEFAULT_)"
 
 
@@ -563,7 +543,7 @@ class Driver:
     assert: 0 <= channel <= 12
     assert: 0 <= current <= CHARGE-DISCHARGE-CURRENT-MAX_
     value := devices_[identifier].read-u8 (CDC0-REGISTER-ADDRESS_ + channel)
-    write-register-u8 --identifier=identifier  --register=(CDC0-REGISTER-ADDRESS_ + channel) --value=current
+    write-register-u8_ --identifier=identifier  --register=(CDC0-REGISTER-ADDRESS_ + channel) --value=current
     logger_.debug "channel-charge-discharge-current: (0x$(%02x identifier)): channel$(channel) register=$(bits-16 (CDC0-REGISTER-ADDRESS_ + channel)) value=$(current)"
 
   /** channel-charge-time - Sets the charge time applied to each channel. 
@@ -585,7 +565,7 @@ class Driver:
     new-value := old-value
     new-value &= ~((CDT-CHARGE-TIME-MASK_) << shift)
     new-value |= (time & CDT-CHARGE-TIME-MASK_) << shift
-    write-register-u8 --identifier=identifier  --register=register --value=new-value
+    write-register-u8_ --identifier=identifier  --register=register --value=new-value
     logger_.debug "channel-charge-discharge-time (0x$(%02x identifier)): from=$(bits-16 old-value) to=$(bits-16 time)"
     logger_.debug "channel-charge-discharge-time (0x$(%02x identifier)): register=0x$(%02x register) from=$(bits-16 old-value) to=$(bits-16 new-value)"
     sleep --ms=1
@@ -754,29 +734,132 @@ class Driver:
 
 
 */
+  stop-required-for-write_ register/int -> bool:
+    if ((register == ECR-REGISTER-ADDRESS_) or ((0x73 <= register) and (register <= 0x7A))): return false
+    else: return true
 
+  /** 
+  $write-register-u8_: MPR121 must be put in Stop Mode to write to most registers
+  */
+  write-register-u8_ --identifier --register/int --value/int --mask/int=0xFF --offset/int=0 -> none:
+    // allowed value range within field
+    max/int := mask >> offset                    
+    
+    // assert value fits the field
+    assert: ((value & ~max) == 0)
 
-// HELPER / TROUBLESHOOTING / TESTING / DEBUGGING FUNCTIONS
+    // MPR121 must be put in Stop Mode to write to most registers - find out
+    stop-required/bool := stop-required-for-write_ register
 
-  /** Displays bitmasks nicely */
-  bits-16 x/int --display-bits/int=8 -> string:
-    if (x > 255) or (display-bits > 8):
-      outStr := "$(%b x)"
-      outStr = outStr.pad --left 16 '0'
-      outStr = "$(outStr[0..4]).$(outStr[4..8]).$(outStr[8..12]).$(outStr[12..16])"
-      return outStr
+    // Stop device if necessary:
+    if (stop-required):
+      // first get the current set value of the MPR121_ECR register, then clear it
+      last-ecr-register_[identifier] = devices_[identifier].read-u8 ECR-REGISTER-ADDRESS_
+      devices_[identifier].write-u8 ECR-REGISTER-ADDRESS_ 0x0
+
+    // Get old value
+    old-value/int := devices_[identifier].read-u8 register
+
+    // Split out the simple case
+    if (mask == 0xFF) and (offset == 0):
+      devices_[identifier].write-u8 register (value & 0xFFFF)
+      //logger_.debug "write-register_: Register 0x$(%02x register) set from $(%04x old-value) to $(%04x value) $(note)"
     else:
-      outStr := "$(%b x)"
-      outStr = outStr.pad --left 8 '0'
-      outStr = "$(outStr[0..4]).$(outStr[4..8])"
-      return outStr
+      new-value/int := old-value
+      new-value     &= ~mask
+      new-value     |= (value << offset)
+      devices_[identifier].write-u16-be register new-value
+      //logger_.debug "write-register_: Register 0x$(%02x register) set from $(bits-16 old-value) to $(bits-16 new-value) $(note)"
 
-  // stop any running tasks
+    // Stop device if necessary:
+    if (stop-required):
+      // write back the previous set ECR settings, to start the device if we stopped it
+      devices_[identifier].write-u8 ECR-REGISTER-ADDRESS_ last-ecr-register_[identifier]
+
+  /** 
+  $read-register-u8_: MPR121 must be put in Stop Mode to write to most registers
+  */
+  read-register-u8_ --identifier --register/int --mask/int=0xFF --offset/int=0 -> any:
+    register-value := devices_[identifier].read-u8 register
+    if mask == 0xFF and offset == 0:
+      //logger_.debug "read-register-u8: reg-0x$(%02x register) is $(%04x register-value)"
+      return register-value
+    else:
+      masked-value := (register-value & mask) >> offset
+      //logger_.debug "read-register-u8: reg-0x$(%02x register) is $(bits-16 register-value) mask=[$(bits-16 mask) + offset=$(offset)] [$(bits-16 masked-value)]"
+      return masked-value
+
+  /** 
+  $read-register-u16-be_: Given that register reads are largely similar, implemented here.
+
+  If the mask is left at 0xFFFF and offset at 0x0, it is a read from the whole register.
+  */
+  read-register-u16-be_ --identifier  --register/int --mask/int=0xFFFF --offset/int=0 -> any:
+    register-value := devices_[identifier].read-u16-be register
+    if mask == 0xFFFF and offset == 0:
+      //logger_.debug "read-register_: reg-0x$(%02x register) is $(%04x register-value)"
+      return register-value
+    else:
+      masked-value := (register-value & mask) >> offset
+      //logger_.debug "read-register_: reg-0x$(%02x register) is $(bits-16 register-value) mask=[$(bits-16 mask) + offset=$(offset)] [$(bits-16 masked-value)]"
+      return masked-value
+
+  /** 
+  $write-register-u16-be_: Given that register writes are largely similar, implemented here.
+
+  If the mask is left at 0xFFFF and offset at 0x0, it is a write to the whole register.
+  */
+  write-register-u16-be_ --identifier --register/int --mask/int=0xFFFF --offset/int=0 --value/any --note/string="" -> none:
+    max/int := mask >> offset                // allowed value range within field
+    assert: ((value & ~max) == 0)            // value fits the field
+    old-value/int := devices_[identifier].read-u16-be register
+
+    // Split out the simple case
+    if (mask == 0xFFFF) and (offset == 0):
+      devices_[identifier].write-u16-be register (value & 0xFFFF)
+      //logger_.debug "write-register_: Register 0x$(%02x register) set from $(%04x old-value) to $(%04x value) $(note)"
+    else:
+      new-value/int := old-value
+      new-value     &= ~mask
+      new-value     |= (value << offset)
+      devices_[identifier].write-u16-be register new-value
+      //logger_.debug "write-register_: Register 0x$(%02x register) set from $(bits-16 old-value) to $(bits-16 new-value) $(note)"
+
+  /** 
+  $bits-16: Displays bitmasks nicely when testing.
+  */
+  bits-16 x/int --min-display-bits/int=0 -> string:
+    if (x > 255) or (min-display-bits > 8):
+      out-string := "$(%b x)"
+      out-string = out-string.pad --left 16 '0'
+      out-string = "$(out-string[0..4]).$(out-string[4..8]).$(out-string[8..12]).$(out-string[12..16])"
+      //logger_.debug "bits-16: 16 $(x) $(%0b x) gave $(out-string)"
+      return out-string
+    else if (x > 15) or (min-display-bits > 4):
+      out-string := "$(%b x)"
+      out-string = out-string.pad --left 8 '0'
+      out-string = "$(out-string[0..4]).$(out-string[4..8])"
+      //logger_.debug "bits-16: 08 $(x) $(%0b x) gave $(out-string)"
+      return out-string
+    else:
+      out-string := "$(%b x)"
+      out-string = out-string.pad --left 4 '0'
+      out-string = "$(out-string[0..4])"
+      //logger_.debug "bits-16: 04 $(x) $(%0b x) gave $(out-string)"
+      return out-string
+
+
+  /** 
+  $debug-touched: Testing of touch for dubugging purposes.
+  */
   stop-all-tasks -> none:
     tasks_.keys.do:
       tasks_[it].cancel
       logger_.info "stop-all: task '$(it)' is cleared"
 
+  /** 
+  $debug-touched: Testing of touch for dubugging purposes.
+  */
   debug-touched -> none:
     stop-all-tasks
     tasks_["debug-touched"] = task:: debug-touched_
@@ -788,21 +871,33 @@ class Driver:
       devices_.keys.do: 
         out = touched --identifier=it
         if out > 0:
-          logger_.debug "debug-touched: $(bits-16 out --display-bits=16)"
+          logger_.debug "debug-touched: $(bits-16 out --min-display-bits=16)"
       sleep --ms=50
 
-  read-afe1-register --identifier -> none:
+  /** 
+  $show-afe1-register: Show bitmask of the AFE1 register.
+  */
+  show-afe1-register --identifier -> none:
     value := devices_[identifier].read-u8 FILTER-GLOBAL-CDC-REGISTER-ADDRESS_
     logger_.debug "read-afe1-register : read FILTER-GLOBAL-CDC-REGISTER-ADDRESS_[$(%02x identifier)]  has 0x$(%04x value) [$(bits-16 value)]"
 
-  read-afe2-register --identifier -> none:
+  /** 
+  $show-afe2-register: Show bitmask of the AFE2 register.
+  */
+  show-afe2-register --identifier -> none:
     value := devices_[identifier].read-u8 FILTER-GLOBAL-CDT-REGISTER-ADDRESS_
     logger_.debug "read-afe2-register : read FILTER-GLOBAL-CDT-REGISTER-ADDRESS_[$(%02x identifier)]  has 0x$(%04x value) [$(bits-16 value)]"
 
-  read-accr0-register --identifier -> none:
+  /** 
+  $show-accr0-register: Show bitmask of the ACCR0 register.
+  */
+  show-accr0-register --identifier -> none:
     value := devices_[identifier].read-u8 ACCR0-REGISTER-ADDRESS_
     logger_.debug "read-accr0-register: read ACCR0-REGISTER-ADDRESS_[$(%02x identifier)] has 0x$(%04x value) [$(bits-16 value)]"
 
-  read-accr1-register --identifier -> none:
+  /** 
+  $show-accr1-register: Show bitmask of the ACCR0 register.
+  */
+  show-accr1-register --identifier -> none:
     value := devices_[identifier].read-u8 ACCR1-REGISTER-ADDRESS_
     logger_.debug "read-accr1-register: read ACCR1-REGISTER-ADDRESS_[$(%02x identifier)] has 0x$(%04x value) [$(bits-16 value)]"
