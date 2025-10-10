@@ -1,5 +1,3 @@
-// {}
-
 name: mpr121
 description: Support for I2C MPR121 12 channel proximity/sensing module
 environment:
