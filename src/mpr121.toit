@@ -24,46 +24,43 @@ Datasheet: https://www.nxp.com/docs/en/data-sheet/MPR121.pdf
 */
 
 class Mpr121:
-  // PUBLIC
-  static DEVICE_COUNT_MAX_                       ::= 4  // implied given the address limitation
-
   // Device can be configured between 0x58 and 0x5d
-  static PHYSICAL_CHANNELS_PER_DEVICE_           ::= 12
-  static CHANNELS_PER_DEVICE_                    ::= 13
+  static PHYSICAL_CHANNELS_PER_DEVICE_ ::= 12
+  static CHANNELS_PER_DEVICE_ ::= 13
 
-  static I2C-ADDRESS                             ::= 0x5a
-  static I2C-ADDRESS-TOUCH                       ::= 0x5c
-  static I2C-ADDRESS-5B                          ::= 0x5b
-  static I2C-ADDRESS-5D                          ::= 0x5d
+  static I2C-ADDRESS       ::= 0x5a
+  static I2C-ADDRESS-TOUCH ::= 0x5c
+  static I2C-ADDRESS-5B    ::= 0x5b
+  static I2C-ADDRESS-5D    ::= 0x5d
 
-  static PROXIMITY-MODE-DISABLED                 := 0    // default set by this driver
-  static PROXIMITY-MODE-COMBINE_0_TO_1           := 1
-  static PROXIMITY-MODE-COMBINE_0_TO_3           := 2
-  static PROXIMITY-MODE-COMBINE_0_TO_11          := 3
+  static PROXIMITY-MODE-DISABLED        := 0 // default set by this driver
+  static PROXIMITY-MODE-COMBINE_0_TO_1  := 1
+  static PROXIMITY-MODE-COMBINE_0_TO_3  := 2
+  static PROXIMITY-MODE-COMBINE_0_TO_11 := 3
 
-  static BASELINE-TRACKING-DISABLED              := 0x01
-  static BASELINE-TRACKING-INIT-0                := 0x00 // default in chipset
-  static BASELINE-TRACKING-INIT-5BIT             := 0x02
-  static BASELINE-TRACKING-INIT-10BIT            := 0x03
+  static BASELINE-TRACKING-DISABLED   := 0x01
+  static BASELINE-TRACKING-INIT-0     := 0x00 // default in chipset
+  static BASELINE-TRACKING-INIT-5BIT  := 0x02
+  static BASELINE-TRACKING-INIT-10BIT := 0x03
 
-  static CHARGE_DISCHARGE_TIME_DISABLED          := 0x00
-  static CHARGE_DISCHARGE_TIME_HALF_US           := 0x01 // default
-  static CHARGE_DISCHARGE_TIME_1US               := 0x02
-  static CHARGE_DISCHARGE_TIME_2US               := 0x03
-  static CHARGE_DISCHARGE_TIME_4US               := 0x04
-  static CHARGE_DISCHARGE_TIME_8US               := 0x05
-  static CHARGE_DISCHARGE_TIME_16US              := 0x06
-  static CHARGE_DISCHARGE_TIME_32US              := 0x07
+  static CHARGE_DISCHARGE_TIME_DISABLED := 0x00
+  static CHARGE_DISCHARGE_TIME_HALF_US  := 0x01 // default
+  static CHARGE_DISCHARGE_TIME_1US      := 0x02
+  static CHARGE_DISCHARGE_TIME_2US      := 0x03
+  static CHARGE_DISCHARGE_TIME_4US      := 0x04
+  static CHARGE_DISCHARGE_TIME_8US      := 0x05
+  static CHARGE_DISCHARGE_TIME_16US     := 0x06
+  static CHARGE_DISCHARGE_TIME_32US     := 0x07
 
-  static FIRST_FILTER_ITERATIONS_6               := 0x00 // default
-  static FIRST_FILTER_ITERATIONS_10              := 0x01
-  static FIRST_FILTER_ITERATIONS_18              := 0x02
-  static FIRST_FILTER_ITERATIONS_34              := 0x03
+  static FIRST_FILTER_ITERATIONS_6  := 0x00 // default
+  static FIRST_FILTER_ITERATIONS_10 := 0x01
+  static FIRST_FILTER_ITERATIONS_18 := 0x02
+  static FIRST_FILTER_ITERATIONS_34 := 0x03
 
-  static SECOND_FILTER_ITERATIONS_4              := 0x00 // default
-  static SECOND_FILTER_ITERATIONS_6              := 0x01
-  static SECOND_FILTER_ITERATIONS_10             := 0x02
-  static SECOND_FILTER_ITERATIONS_18             := 0x03
+  static SECOND_FILTER_ITERATIONS_4  := 0x00 // default
+  static SECOND_FILTER_ITERATIONS_6  := 0x01
+  static SECOND_FILTER_ITERATIONS_10 := 0x02
+  static SECOND_FILTER_ITERATIONS_18 := 0x03
 
 /** Sample periods of the MPR121 - the time between capacitive readings.
     Higher values consume less power, but are less responsive. */
@@ -77,46 +74,46 @@ class Mpr121:
   static SAMPLE_PERIOD_128MS := 0x07
 
   // register addresses
-  static REG-TOUCH-STATUS_          := 0x00  // Low, high = 0x01
-  static REG-OUT-OF-RANGE-STATUS_   := 0x02
-  static REG-FILTERED-DATA0_        := 0x04  // Low, high = 0x05
-  static REG-BASELINE-DATA0_        := 0x1E
+  static REG-TOUCH-STATUS_        := 0x00  // = Low, high = 0x01
+  static REG-OUT-OF-RANGE-STATUS_ := 0x02
+  static REG-FILTERED-DATA0_      := 0x04  // = Low, high = 0x05
+  static REG-BASELINE-DATA0_      := 0x1e
 
   // general electrode touch sense baseline filters
   // rising filter
-  static REG-MHDR_ ::= 0x2B
-  static REG-NHDR_ ::= 0x2C
-  static REG-NCLR_ ::= 0x2D
-  static REG-FDLR_ ::= 0x2E
+  static REG-MHD-RISING_ ::= 0x2B
+  static REG-NHD-RISING_ ::= 0x2c // Amount
+  static REG-NCL-RISING_ ::= 0x2d
+  static REG-FDL-RISING_ ::= 0x2e
 
   // falling filter
-  static REG-MHDF_ ::= 0x2F
-  static REG-NHDF_ ::= 0x30
-  static REG-NCLF_ ::= 0x31
-  static REG-FDLF_ ::= 0x32
+  static REG-MHD-FALLING_ ::= 0x2f
+  static REG-NHD-FALLING_ ::= 0x30
+  static REG-NCL-FALLING_ ::= 0x31
+  static REG-FDL-FALLING_ ::= 0x32
 
   // touched filter
-  static REG-NHDT_ ::= 0x33
-  static REG-NCLT_ ::= 0x34
-  static REG-FDLT_ ::= 0x35
+  static REG-NHD-TOUCHED_ ::= 0x33
+  static REG-NCL-TOUCHED_ ::= 0x34
+  static REG-FDL-TOUCHED_ ::= 0x35
 
   // proximity electrode touch sense baseline filters
   // rising filter
-  static REG-MHDPROXR_ ::= 0x36
-  static REG-NHDPROXR_ ::= 0x37
-  static REG-NCLPROXR_ ::= 0x38
-  static REG-FDLPROXR_ ::= 0x39
+  static REG-PROX-MHD-RISING_ ::= 0x36
+  static REG-PROX-NHD-RISING_ ::= 0x37
+  static REG-PROX-NCL-RISING_ ::= 0x38
+  static REG-PROX-FDL-RISING_ ::= 0x39
 
   // falling filter
-  static REG-MHDPROXF_ ::= 0x3A
-  static REG-NHDPROXF_ ::= 0x3B
-  static REG-NCLPROXF_ ::= 0x3C
-  static REG-FDLPROXF_ ::= 0x3D
+  static REG-PROX-MHD-FALLING_ ::= 0x3a
+  static REG-PROX-NHD-FALLING_ ::= 0x3b
+  static REG-PROX-NCL-FALLING_ ::= 0x3c
+  static REG-PROX-FDL-FALLING_ ::= 0x3d
 
   // touched filter
-  static REG-NHDPROXT_ ::= 0x3E
-  static REG-NCLPROXT_ ::= 0x3F
-  static REG-FDLPROXT_ ::= 0x40
+  static REG-PROX-NHD-TOUCHED_ ::= 0x3e
+  static REG-PROX-NCL-TOUCHED_ ::= 0x3f
+  static REG-PROX-FDL-TOUCHED_ ::= 0x40
 
   // electrode touch and release thresholds
   static REG-TOUCH-THRESHOLD0_      ::= 0x41
@@ -132,12 +129,12 @@ class Mpr121:
   static DEBOUNCE-TOUCH-OFFSET_   ::= 0
 
   // channel charge-discharge CURRENTS
-  static REG-CDC0_                     ::= 0x5F
+  static REG-CDC0_                     ::= 0x5f
   static CHARGE-DISCHARGE-CURRENT-MIN_ ::= 0     // 0 = defer to global
   static CHARGE-DISCHARGE-CURRENT-MAX_ ::= 63
 
   // channel charge-discharge TIMES
-  static REG-CDT0_             ::= 0x6C
+  static REG-CDT0_             ::= 0x6c
   static CDT-CHARGE-TIME-MASK_ ::= 0x07
   static CDT-FIELD-DIVISOR_    ::= 2
   static CDT-FIELD-OFFSET_     ::= 4
@@ -150,20 +147,20 @@ class Mpr121:
   static REG_GPIO-EN_   ::= 0x77
   static REG_GPIO-SET_  ::= 0x78
   static REG_GPIO-CLR_  ::= 0x79
-  static REG_GPIO-TOG_  ::= 0x7A
+  static REG_GPIO-TOG_  ::= 0x7a
 
   // Configuration registers
-  static REG-FILTER-GLOBAL-CDC_         ::= 0x5C
-  static REG-FILTER-GLOBAL-CDT_         ::= 0x5D
-  static FILTER-GLOBAL-CDC-DEFAULT_     ::= 0b0001_0000
-  static FILTER-GLOBAL-CDT-DEFAULT_     ::= 0b0010_0100
+  static REG-FILTER-GLOBAL-CDC_     ::= 0x5c
+  static REG-FILTER-GLOBAL-CDT_     ::= 0x5d
+  static FILTER-GLOBAL-CDC-DEFAULT_ ::= 0b0001_0000
+  static FILTER-GLOBAL-CDT-DEFAULT_ ::= 0b0010_0100
 
   //auto-config
-  static REG-ACCR0_ ::= 0x7B
-  static REG-ACCR1_ ::= 0x7C
-  static REG-USL_   ::= 0x7D  // Upper Limit
-  static REG-LSL_   ::= 0x7E  // Lower Limit
-  static REG-TL_    ::= 0x7F  // Target Limit
+  static REG-ACCR0_ ::= 0x7b
+  static REG-ACCR1_ ::= 0x7c
+  static REG-USL_   ::= 0x7d  // Upper Limit
+  static REG-LSL_   ::= 0x7e  // Lower Limit
+  static REG-TL_    ::= 0x7f  // Target Limit
 
   //soft reset
   static REG-SOFT-RESET_   ::= 0x80
@@ -176,7 +173,7 @@ class Mpr121:
   //static PWM3_ ::= 0x84
 
   //ECR
-  static REG-ECR_                      ::= 0x5E
+  static REG-ECR_                      ::= 0x5e
   static ECR-ELECTRODE-MASK_           ::= 0b0000_1111
   static ECR-PROXIMITY-MASK_           ::= 0b0011_0000
   static ECR-CONFIGURATION-LOCK-MASK_  ::= 0b1100_0000
@@ -192,34 +189,36 @@ class Mpr121:
 
   // Baseline Configuration
   static BASELINE-CONFIGURATION-JANELIA_/Map   ::= {
-    REG-MHDR_     : 0x01,
-    REG-NHDR_     : 0x01,
-    REG-NCLR_     : 0x10,
-    REG-FDLR_     : 0x20,
-    REG-MHDF_     : 0x01,
-    REG-NHDF_     : 0x01,
-    REG-NCLF_     : 0x10,
-    REG-FDLF_     : 0x20,
-    REG-NHDT_     : 0x01,
-    REG-NCLT_     : 0x10,
-    REG-FDLT_     : 0xFF,
-    REG-MHDPROXR_ : 0x0F,
-    REG-NHDPROXR_ : 0x0F,
-    REG-NCLPROXR_ : 0x00,
-    REG-FDLPROXR_ : 0x00,
-    REG-MHDPROXF_ : 0x01,
-    REG-NHDPROXF_ : 0x01,
-    REG-NCLPROXF_ : 0xFF,
-    REG-FDLPROXF_ : 0xFF,
-    REG-NHDPROXT_ : 0x00,
-    REG-NCLPROXT_ : 0x00,
-    REG-FDLPROXT_ : 0x00,
-    REG-DEBOUNCE_ : 0x11,
-    REG-ACCR0_    : 0x00,
-    REG-ACCR1_    : 0x00,
-    REG-USL_      : 0x00,
-    REG-LSL_      : 0x00,
-    REG-TL_       : 0x00 }
+    REG-MHD-RISING_       : 0x01,
+    REG-NHD-RISING_       : 0x01,
+    REG-NCL-RISING_       : 0x10,
+    REG-FDL-RISING_       : 0x20,
+    REG-MHD-FALLING_      : 0x01,
+    REG-NHD-FALLING_      : 0x01,
+    REG-NCL-FALLING_      : 0x10,
+    REG-FDL-FALLING_      : 0x20,
+    REG-NHD-TOUCHED_      : 0x01,
+    REG-NCL-TOUCHED_      : 0x10,
+    REG-FDL-TOUCHED_      : 0xFF,
+    REG-PROX-MHD-RISING_  : 0x0F,
+    REG-PROX-NHD-RISING_  : 0x0F,
+    REG-PROX-NCL-RISING_  : 0x00,
+    REG-PROX-FDL-RISING_  : 0x00,
+    REG-PROX-MHD-FALLING_ : 0x01,
+    REG-PROX-NHD-FALLING_ : 0x01,
+    REG-PROX-NCL-FALLING_ : 0xFF,
+    REG-PROX-FDL-FALLING_ : 0xFF,
+    REG-PROX-NHD-TOUCHED_ : 0x00,
+    REG-PROX-NCL-TOUCHED_ : 0x00,
+    REG-PROX-FDL-TOUCHED_ : 0x00,
+    REG-DEBOUNCE_         : 0x11,
+    REG-ACCR0_            : 0x00,
+    REG-ACCR1_            : 0x00,
+    REG-USL_              : 0x00,
+    REG-LSL_              : 0x00,
+    REG-TL_               : 0x00 }
+
+  static DEFAULT-REGISTER-WIDTH_ ::= 8
 
   // Globals
   reg_/registers.Registers := ?
@@ -228,7 +227,7 @@ class Mpr121:
   last-ecr-register_/int := 0
   tasks_/Map := {:}
 
-  /** Class Constructor: Always constructs with 1 device, but others can be added */
+  /** Class Constructor */
   constructor
       device/serial.Device
       --logger/log.Logger=log.default:
@@ -238,13 +237,11 @@ class Mpr121:
     initialise-device_
 
   initialise-device_ -> none:
-    // Perform soft reset - ensures reset of values especially if the project/code resets but power is not interrupted
     soft-reset
 
-    // Set baseline configuration, as per Janelia code:
+    // Set baseline configuration
     BASELINE-CONFIGURATION-JANELIA_.keys.do:
       reg_.write-u8 it BASELINE-CONFIGURATION-JANELIA_[it]
-      //logger_.debug "initialise-device_: Wrote 0x$(%02x it) with   0x$(%02x BASELINE-CONFIGURATION-JANELIA_[it]) [$(bits-16_ BASELINE-CONFIGURATION-JANELIA_[it])]"
 
     set-thresholds --touch=TOUCH-THRESHOLD-DEFAULT_ --release=RELEASE-THRESHOLD-DEFAULT_
 
@@ -264,9 +261,12 @@ class Mpr121:
     show-afe1-register
     show-afe2-register
 
-  /** touch-pins-enabled: sets the number of touch pins enabled
-      Must be set as a group, a number of consecutive pins from pin 0.  Cannot enable/disable them individually.
-      */
+  /**
+  Sets the number of touch pins enabled
+
+  Must be set as a contiguous group, a number of consecutive pins from pin 0.
+   Cannot enable/disable them individually.
+  */
   touch-pins-enabled --number-of-pins/int -> none:
     assert: 0 <= number-of-pins <= 12
     old-value:= read-register_ REG-ECR_
@@ -274,22 +274,29 @@ class Mpr121:
     logger_.debug "touch-pins-enabled enable pins $(number-of-pins) from=$(bits-16_ old-value) to=$(bits-16_ number-of-pins)" --tags={"pins-enabled" : number-of-pins}
     sleep --ms=1
 
-  /** set-thresholds:  Set the touch and release thresholds for some, or all, of the 13 channels on the device.
-      The threshold is defined as a deviation value from the baseline value, so it remains constant even if the baseline value changes. Typically the touch threshold is a little bigger than the release threshold to touch debounce and hysteresis. For typical touch application, the value can be in range 0x05~0x30. The setting of the threshold is depended on the actual application.
-      For operational details and how to set the threshold refer to application note AN3892 and MPR121 design guidelines.
-      - touch: the touch threshold value from 0 to 255.
-      - release: the release threshold from 0 to 255.
-      For a specfic channel - higher values = less sensitive */
+  /**
+  Set the touch and release thresholds for all channels.
 
+  The threshold is defined as a deviation value from the baseline value, so it
+   remains constant even if the baseline value changes. Typically the touch
+   threshold is a little bigger than the release threshold to touch debounce and
+   hysteresis. For typical touch application, the value can be in range
+   0x05~0x30. The setting of the threshold is depended on the actual application.
 
-  /** set-thresholds: set all thresholds (the same)
-      */
+  For operational details and how to set the threshold refer to application note
+  AN3892 and MPR121 design guidelines.
+   - touch: the touch threshold value from 0 to 255.
+   - release: the release threshold from 0 to 255.
+  For a specfic channel - higher values = less sensitive
+  */
   set-thresholds --touch/int --release/int -> none:
     set-touch-threshold touch --channel=null
     set-release-threshold release --channel=null
 
   /**
-  set touch threshold for a specific channel
+  Set the touch threshold for a channel.
+
+  See $set-thresholds.
   #TODO test for zero case
   */
   set-touch-threshold threshold --channel/int?=null -> none:
@@ -299,6 +306,12 @@ class Mpr121:
     else:
       write-register_ (REG-TOUCH-THRESHOLD0_ + (2 * channel)) threshold
 
+  /**
+  Set the release threshold for a channel.
+
+  See $set-thresholds.
+  #TODO test for zero case
+  */
   set-release-threshold threshold --channel/int?=null -> none:
     // #TODO measure and ensure release is greater than touch
     // #TODO test for zero case
@@ -316,9 +329,9 @@ class Mpr121:
   Reads the filtered data from specified channel.
 
   The ADC raw data outputs run through 3 levels of digital filtering to filter
-  out the high frequency and low frequency noise encountered. For detailed
-  information on this filtering see page 6 of the device datasheet.  Returns the
-  filtered reading, as a 10 bit unsigned value.
+   out the high frequency and low frequency noise encountered. For detailed
+   information on this filtering see page 6 of the device datasheet.  Returns the
+   filtered reading, as a 10 bit unsigned value.
   */
   read-filtered-channel-data --channel -> int:
     if (channel > 12): return 0
@@ -328,18 +341,21 @@ class Mpr121:
   Returns the baseline value for the channel.
 
   The 3rd level filtered result is internally 10bit but only high 8 bits are
-  readable from registers 0x1E~0x2A as the baseline value output for each
-  channel.
+   readable from registers 0x1E~0x2A as the baseline value output for each
+   channel.
   */
   read-baseline-channel-data --channel -> int:
     if (channel > 12): return 0
     value := reg_.read-u8 (REG-BASELINE-DATA0_ + channel)
     return (value << BASELINE-DATA-BIT-SHIFT_)
 
-  /** touched: Read the touch status of all 13 channels as bit values in a 12
-      bit integer.  Returns a 12 bit integer with each bit corresponding to the
-      touch status of a sensor channel. For example, if bit 5 is equal to 1,
-      then that channel of the device is currently deemed to be touched. */
+  /**
+  Reads the touch status of all 13 channels as bit values in a 12 bit integer.
+
+  Returns a 12 bit integer with each bit corresponding to the touch status of a
+   sensor channel. For example, if bit 5 is equal to 1, then that channel of
+   the device is currently deemed to be touched.
+  */
   touched -> int:
     value := reg_.read-u16-le REG-TOUCH-STATUS_
     output := value & 0x0FFF
@@ -354,14 +370,17 @@ class Mpr121:
     write-register_ REG-ECR_ last-ecr-register_
     logger_.debug "Write REG-ECR_ restored to 0x$(%02x last-ecr-register_) [$(bits-16_ last-ecr-register_)]"
 
-  /** clear-overcurrent-flag: When over current detected, the OVCF bit
-      0b1000_0000 is set on the pin status register, and MPR121 goes to Stop
-      Mode immediately. The ExTS bits in status registers,output registers
-      0x04~0x2A, and bit D5~D0 in ECR will be also cleared on over current
-      condition. When the bit is “1”, writing ECR register (to try to enter Run
-      mode) will be discarded.  Write “1” to OVCF will clear this bit and MPR121
-      fault condition is cleared so that MPR121 can be configured into Run Mode
-      again.  */
+  /**
+  Clears the 'overcurrent' flag.
+
+  When over current detected, the OVCF bit 0b1000_0000 is set on the pin status
+   register, and MPR121 goes to Stop Mode immediately. The ExTS bits in status
+   registers,output registers 0x04~0x2A, and bit D5~D0 in ECR will be also
+   cleared on over current condition. When the bit is “1”, writing ECR register
+   (to try to enter Run mode) will be discarded.  Write “1” to OVCF will clear
+   this bit and MPR121 fault condition is cleared so that MPR121 can be
+   configured into Run Mode again.
+  */
   clear-overcurrent-flag -> none:
     reg_.write-u16-le REG-TOUCH-STATUS_ OVER-CURRENT-REXT_
     write-register_ REG-TOUCH-STATUS_ OVER-CURRENT-REXT_
@@ -378,15 +397,23 @@ class Mpr121:
   auto-reconfig-failed --out-of-range-status/int -> int:
     return get-out-of-range-status & OUT-OF-RANGE-STATUS-ARFF_
 
-  /** set-debounce: sets debounce on all channels for the device.  A channels'
-      status change will only take place after the number of consecutive touch
-      or release detection meets the debounce number. If the number detected
-      does not meet the debounce number, the status will not change.  Valid
-      values are 0-7 */
+  /**
+  Sets release debounce on all channels for the device.
+
+  A channels' status change will only take place after the number of consecutive
+   touch or release detection meets the debounce number. If the number detected
+   does not meet the debounce number, the status will not change.  Valid values
+   are 0-7
+  */
   set-release-debounce release/int -> none:
     assert: 0 <= release <= 7
     write-register_ REG-DEBOUNCE_ release --mask=DEBOUNCE-RELEASE-MASK_
 
+  /**
+  Sets touch debounce on all channels for the device.
+
+  See $set-release-debounce.
+  */
   set-touch-debounce touch/int -> none:
     assert: 0 <= touch <= 7
     write-register_ REG-DEBOUNCE_ touch --mask=DEBOUNCE-TOUCH-MASK_
@@ -409,9 +436,10 @@ class Mpr121:
     assert: 0 <= mode <= 3
     write-register_ REG-ECR_ mode --mask=ECR-PROXIMITY-MASK_
 
-
   /**
-  Sets Configuration Lock register.  Values:
+  Sets Configuration Lock register.
+
+  Values:
   - 0 Baseline tracking enable (Default). The baseline values updates every {ESI
     x SFI} period by MPR121 per baseline filter operation. The initial value is
     ????.
@@ -474,11 +502,16 @@ class Mpr121:
     write-register_ REG-FILTER-GLOBAL-CDT_ FILTER-GLOBAL-CDT-DEFAULT_
 
 
-  /** The MPR121 uses a constant DC current capacitance sensing scheme. It can measure capacitances ranging from 10 pF to over 2000 pF with a resolution up to 0.01 pF. The device does this by varying the amount of charge current and charge time applied to the sensing inputs.*/
+  /** charge-discharge-current: Sets individual Charge Discharge Current per
+  channel if Global value is not used.
 
-  /** charge-discharge-current: Sets individual Charge Discharge Current per channel if Global value is not used.
-      The Individual Charge Discharge Current field selects the supply current to be used when charging and discharging a specific channel. Programmable in 1uA steps, up to 64uA.  When the CDCx is zero, the global value is used.  If auto configuration is enabled and run once, the individual CDC will be automatically updated by MPR121 internally after autoconfiguration is finished.
-      */
+  The Individual Charge Discharge Current field selects the supply current
+  to be used when charging and discharging a specific channel. Programmable
+  in 1uA steps, up to 64uA.  When the CDCx is zero, the global value is
+  used.  If auto configuration is enabled and run once, the individual CDC
+  will be automatically updated by MPR121 internally after autoconfiguration
+  is finished.
+  */
   channel-charge-discharge-current --channel/int -> int:
     assert: 0 <= channel <= 12
     value := read-register_ (REG-CDC0_ + channel)
@@ -638,13 +671,17 @@ class Mpr121:
     logger_.debug "toggle-gpio-pin  toggle  pin $(pin) OUTPUT from=$(bits-16_ old-TOG-reg-value) to=$(bits-16_ new-TOG-reg-value)"
 */
 
-  read-register_  register/int --mask/int?=null --offset/int?=null --width/int=8 --signed/bool=false -> any:
+  read-register_
+      register/int
+      --mask/int?=null
+      --offset/int?=null
+      --width/int=DEFAULT-REGISTER-WIDTH_
+      --signed/bool=false -> any:
     assert: (width == 8) or (width == 16)
     if mask == null:
-      mask = 0xFF
-      if width == 16: mask=0xFFF
+      mask = (width == 16) ? 0xFFFF : 0xFF
     if offset == null:
-      offset = (mask.count-trailing-zeros)
+      offset = mask.count-trailing-zeros
 
     register-value/int? := null
     if width == 8:
@@ -668,58 +705,40 @@ class Mpr121:
       masked-value := (register-value & mask) >> offset
       return masked-value
 
-
-  write-register_ register/int value/any --mask/int?=null --offset/int?=null  --width/int=8 --signed/bool=false -> none:
+  write-register_
+      register/int
+      value/any
+      --mask/int?=null
+      --offset/int?=null
+      --width/int=DEFAULT-REGISTER-WIDTH_
+      --signed/bool=false -> none:
     assert: (width == 8) or (width == 16)
     if mask == null:
-      if width == 16:
-        mask = 0xFFF
-      else:
-        mask = 0xFF
+      mask = (width == 16) ? 0xFFFF : 0xFF
     if offset == null:
-      offset = (mask.count-trailing-zeros)
+      offset = mask.count-trailing-zeros
 
-    max/int := mask >> offset                // allowed value range within field
-    assert: ((value & ~max) == 0)            // value fits the field
+    field-mask/int := (mask >> offset)
+    assert: ((value & ~field-mask) == 0)  // fit check
 
-    // MPR121 must be put in Stop Mode to write to most registers - find out
-    stop-required/bool := true
-    if ((register == REG-ECR_) or ((0x73 <= register) and (register <= 0x7A))):
-      stop-required = false
-
-    if (stop-required):
-      // first get the current set value of the MPR121_ECR register, then clear it
-      last-ecr-register_ = reg_.read-u8 REG-ECR_
-      reg_.write-u8 REG-ECR_ 0x0
-
-    // Start device if necessary using:
-    //if stop-required: reg_.write-u8 REG-ECR_ last-ecr-register_
-
-    // Split out the simple full reg writes, start device if required, & return
-    if width == 8 and mask == 0xFF:
-      if signed:
-        reg_.write-i8 register (value & mask)
+    // Full-width direct write
+    if ((width == 8)  and (mask == 0xFF)  and (offset == 0)) or
+      ((width == 16) and (mask == 0xFFFF) and (offset == 0)):
+      if width == 8:
+        signed ? reg_.write-i8 register (value & 0xFF) : reg_.write-u8 register (value & 0xFF)
       else:
-        reg_.write-u8 register (value & mask)
-      if stop-required: reg_.write-u8 REG-ECR_ last-ecr-register_
-      return
-    if width == 16 and mask == 0xFFFF:
-      if signed:
-        reg_.write-i16-be register (value & mask)
-      else:
-        reg_.write-u16-be register (value & mask)
-      if stop-required: reg_.write-u8 REG-ECR_ last-ecr-register_
+        signed ? reg_.write-i16-be register (value & 0xFFFF) : reg_.write-u16-be register (value & 0xFFFF)
       return
 
-    // Reg must need modification based on Mask
+    // Read Reg for modification
     old-value/int? := null
     if width == 8:
-      if signed:
+      if signed :
         old-value = reg_.read-i8 register
       else:
         old-value = reg_.read-u8 register
-    if width == 16:
-      if signed:
+    else:
+      if signed :
         old-value = reg_.read-i16-be register
       else:
         old-value = reg_.read-u16-be register
@@ -728,24 +747,13 @@ class Mpr121:
       logger_.error "write-register_: Read existing value (for modification) failed."
       throw "write-register_: Read failed."
 
-    new-value/int := old-value
-    new-value     &= ~mask
-    new-value     |= (value << offset)
-    reg_.write-u16-be register new-value
+    new-value/int := (old-value & ~mask) | ((value & field-mask) << offset)
 
     if width == 8:
-      if signed:
-        reg_.write-i8 register new-value
-      else:
-        reg_.write-u8 register new-value
-      if stop-required: reg_.write-u8 REG-ECR_ last-ecr-register_
+      signed ? reg_.write-i8 register new-value : reg_.write-u8 register new-value
       return
-    if width == 16:
-      if signed:
-        reg_.write-i16-be register new-value
-      else:
-        reg_.write-u16-be register new-value
-      if stop-required: reg_.write-u8 REG-ECR_ last-ecr-register_
+    else:
+      signed ? reg_.write-i16-be register new-value : reg_.write-u16-be register new-value
       return
 
     throw "write-register_: Unhandled Circumstance."
@@ -754,6 +762,7 @@ class Mpr121:
   Provides strings to display bitmasks nicely when testing.
   */
   bits-16_ x/int --min-display-bits/int=0 -> string:
+    assert: (x >= 0) and (x <= 0xFFFF)
     if (x > 255) or (min-display-bits > 8):
       out-string := "$(%b x)"
       out-string = out-string.pad --left 16 '0'
@@ -770,6 +779,7 @@ class Mpr121:
       out-string = "$(out-string[0..4])"
       return out-string
 
+
   /**
   Removes all tasks, purpose of stopping debugging task.
   */
@@ -777,6 +787,7 @@ class Mpr121:
     tasks_.keys.do:
       tasks_[it].cancel
       logger_.info "stop-all: task '$(it)' is cleared"
+    tasks_.clear
 
   /**
   Sets a task which prints the bitmask of keys touched, for dubugging purposes.
@@ -786,6 +797,9 @@ class Mpr121:
     tasks_["debug-touched"] = task:: debug-touched_
     logger_.info "debug-touched: task is set"
 
+  /**
+  Logs a debug whenever a channel is touched or released.
+  */
   debug-touched_ -> none:
     out/int := 0
     while true:
@@ -795,28 +809,28 @@ class Mpr121:
       sleep --ms=50
 
   /**
-  Logs bitmask of the AFE1 register.
+  Logs a bitmask of the AFE1 register.
   */
   show-afe1-register -> none:
     value := read-register_ REG-FILTER-GLOBAL-CDC_
     logger_.debug "read-afe1-register : read REG-FILTER-GLOBAL-CDC_  has 0x$(%04x value) [$(bits-16_ value)]"
 
   /**
-  Logs bitmask of the AFE2 register.
+  Logs a bitmask of the AFE2 register.
   */
   show-afe2-register -> none:
     value := read-register_ REG-FILTER-GLOBAL-CDT_
     logger_.debug "read-afe2-register : read REG-FILTER-GLOBAL-CDT_  has 0x$(%04x value) [$(bits-16_ value)]"
 
   /**
-  Logs bitmask of the ACCR0 register.
+  Logs a bitmask of the ACCR0 register.
   */
   show-accr0-register -> none:
     value := read-register_ REG-ACCR0_
     logger_.debug "read-accr0-register: read REG-ACCR0_ has 0x$(%04x value) [$(bits-16_ value)]"
 
   /**
-  Logs bitmask of the ACCR1 register.
+  Logs a bitmask of the ACCR1 register.
   */
   show-accr1-register -> none:
     value := read-register_ REG-ACCR1_

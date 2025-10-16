@@ -12,6 +12,16 @@
 
 ## Features
 
+The MPR121 uses a constant DC current capacitance sensing scheme. It can measure
+capacitances ranging from 10 pF to over 2000 pF with a resolution up to 0.01 pF.
+The device does this by varying the amount of charge current and charge time
+applied to the sensing inputs.
+
+
+## Not Yet Implemented
+At this time:
+- GPIO function has not been implemented.
+- LED driver function has not yet been implemented.
 
 
 ## Issues
