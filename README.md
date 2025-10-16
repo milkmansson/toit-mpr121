@@ -1,8 +1,14 @@
 # Toit Driver library for the MPR121 Touch/Proximity sensor
+This is a Toit driver for the MPR121 is a capacitive touch sensor controller,
+made by NXP Semiconductors.  It detects when a finger (or any conductive object)
+approaches or touches one of the pads.
 
 ## Status: INCOMPLETE
 > [!WARNING]
 > Still under development.  Features unlikely to work.
+
+![Front and back of an as5600](images/mpr121.jpg)
+
 
 ## Overview
 
@@ -11,18 +17,15 @@
 
 
 ## Features
-
 The MPR121 uses a constant DC current capacitance sensing scheme. It can measure
 capacitances ranging from 10 pF to over 2000 pF with a resolution up to 0.01 pF.
 The device does this by varying the amount of charge current and charge time
 applied to the sensing inputs.
 
-
 ## Not Yet Implemented
 At this time:
 - GPIO function has not been implemented.
 - LED driver function has not yet been implemented.
-
 
 ## Issues
 If there are any issues, changes, or any other kind of feedback, please
