@@ -5,16 +5,12 @@ approaches or touches one of the pads.
 
 ## Status: INCOMPLETE
 > [!WARNING]
-> Still under development.  Features unlikely to work.
+> Still under development.
 
 ![Front and back of an as5600](images/mpr121.jpg)
 
-
-## Overview
-
-
 ## Quickstart
-
+For a quick overview and to get started, see the [examples](./examples/)
 
 ## Features
 The MPR121 uses a constant DC current capacitance sensing scheme. It can measure

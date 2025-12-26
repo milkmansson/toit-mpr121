@@ -14,6 +14,7 @@
 
 import log
 import binary
+import gpio
 import serial.device as serial
 import serial.registers as registers
 
@@ -25,13 +26,16 @@ Datasheet: https://www.nxp.com/docs/en/data-sheet/MPR121.pdf
 
 class Mpr121:
   // Device can be configured between 0x58 and 0x5d
-  static PHYSICAL_CHANNELS_PER_DEVICE_ ::= 12
-  static CHANNELS_PER_DEVICE_ ::= 13
+  static I2C-ADDRESS       ::= 0x58
+  static I2C-ADDRESS-58    ::= 0x58
+  static I2C-ADDRESS-59    ::= 0x59
+  static I2C-ADDRESS-5a    ::= 0x5a
+  static I2C-ADDRESS-5b    ::= 0x5b
+  static I2C-ADDRESS-5c    ::= 0x5c
+  static I2C-ADDRESS-5d    ::= 0x5d
 
-  static I2C-ADDRESS       ::= 0x5a
-  static I2C-ADDRESS-TOUCH ::= 0x5c
-  static I2C-ADDRESS-5B    ::= 0x5b
-  static I2C-ADDRESS-5D    ::= 0x5d
+  static PHYSICAL-CHANNELS ::= 12
+  static CHANNELS ::= 13
 
   static PROXIMITY-MODE-DISABLED        := 0 // default set by this driver
   static PROXIMITY-MODE-COMBINE_0_TO_1  := 1
@@ -181,10 +185,10 @@ class Mpr121:
   static BASELINE-DATA-BIT-SHIFT_      ::= 2
 
   //Other Statics
-  static OVER-CURRENT-REXT_                      ::= 0b1000_0000_0000_0000
-  static TOUCH-STATUS-MASK-BASE_                 ::= 0x1FFF
-  static OUT-OF-RANGE-STATUS-ACFF_               ::= 0x8000
-  static OUT-OF-RANGE-STATUS-ARFF_               ::= 0x4000
+  static OVER-CURRENT-REXT_         ::= 0b1000_0000_0000_0000
+  static TOUCH-STATUS-MASK-BASE_    ::= 0x1FFF
+  static OUT-OF-RANGE-STATUS-ACFF_  ::= 0x8000
+  static OUT-OF-RANGE-STATUS-ARFF_  ::= 0x4000
 
 
   // Baseline Configuration
@@ -301,7 +305,7 @@ class Mpr121:
   */
   set-touch-threshold threshold --channel/int?=null -> none:
     if channel == null:
-      PHYSICAL_CHANNELS_PER_DEVICE_.repeat:
+      PHYSICAL-CHANNELS.repeat:
         set-touch-threshold threshold --channel=(it)
     else:
       write-register_ (REG-TOUCH-THRESHOLD0_ + (2 * channel)) threshold
@@ -316,7 +320,7 @@ class Mpr121:
     // #TODO measure and ensure release is greater than touch
     // #TODO test for zero case
     if channel == null:
-      PHYSICAL_CHANNELS_PER_DEVICE_.repeat:
+      PHYSICAL-CHANNELS.repeat:
         set-release-threshold threshold --channel=(it)
     else:
       write-register_ (REG-RELEASE-THRESHOLD0_ + (2 * channel)) threshold
@@ -835,3 +839,114 @@ class Mpr121:
   show-accr1-register -> none:
     value := read-register_ REG-ACCR1_
     logger_.debug "read-accr1-register: read REG-ACCR1_ has 0x$(%04x value) [$(bits-16_ value)]"
+
+
+/**
+Class to contain and handle blocks being used as callbacks
+*/
+class Mpr121Events:
+  static DEFAULT-POLL-WAIT-TIME_ ::= 20
+
+  mpr_/Mpr121 := ?               // MPR121 driver object
+  intrpt-pin_ /gpio.Pin? := null // optional gpio.Pin
+  logger_/log.Logger := ?
+
+  runner-task_/Task? := null
+  touch-lambdas_/Map := {:}
+  touch-lambda-tasks_/Map := {:}
+  release-lambdas_/Map := {:}
+  release-lambda-tasks_/Map := {:}
+
+  static CHANNEL-01 ::= 0b00000000_00000001
+  static CHANNEL-02 ::= 0b00000000_00000010
+  static CHANNEL-03 ::= 0b00000000_00000100
+  static CHANNEL-04 ::= 0b00000000_00001000
+  static CHANNEL-05 ::= 0b00000000_00010000
+  static CHANNEL-06 ::= 0b00000000_00100000
+  static CHANNEL-07 ::= 0b00000000_01000000
+  static CHANNEL-08 ::= 0b00000000_10000000
+  static CHANNEL-09 ::= 0b00000001_00000000
+  static CHANNEL-10 ::= 0b00000010_00000000
+  static CHANNEL-11 ::= 0b00000100_00000000
+  static CHANNEL-12 ::= 0b00001000_00000000
+
+  /** Constructor for use with an interrupt pin. */
+  constructor mpr121 --intrpt-pin/gpio.Pin --logger=log.default:
+    mpr_ = mpr121
+    intrpt-pin_ = intrpt-pin
+    intrpt-pin_.configure --input --pull-up
+    logger_ = logger.with-name "mpr121.events"
+    start
+
+  /** Whether the runner task is running. */
+  running -> bool:
+    if not runner-task_:
+      return false
+    return not runner-task_.is-canceled
+
+  start -> none:
+    if not running:
+      runner-task_ = task:: wait-for-touch_
+      return
+    logger_.debug "already started"
+
+  stop -> none:
+    // Remove any running tasks.
+    touch-lambda-tasks_.keys.do: | touch-mask |
+      touch-lambda-tasks_[touch-mask].cancel
+      touch-lambda-tasks_.remove touch-mask
+
+    // Stop the runner.
+    if running:
+      runner-task_.cancel
+      logger_.debug "runner stopped"
+      return
+    logger_.debug "already stopped"
+
+
+  on-touch channel/int lambda/Lambda -> none:
+    assert: 0 < channel < 0xFFF
+    touch-lambdas_[channel] = lambda
+
+  remove-touch channel/int -> none:
+    assert: 0 < channel < 0xFFF
+    if touch-lambdas_.contains channel:
+      touch-lambdas_.remove [channel]
+
+  wait-for-touch_ -> none:
+    touch-mask-prev/int := 0
+    touch-mask-new/int := 0
+    logger_.debug "runner started"
+
+    while true:
+      // Wait for interrupt.
+      intrpt-pin_.wait-for 1
+      touch-mask-new = mpr_.touched
+
+      // If nothing changed, do nothing.
+      if touch-mask-prev == touch-mask-new: return
+
+      // Bits that changed.
+      changed := touch-mask-new ^ touch-mask-prev
+      pressed := changed & touch-mask-new    // 0->1 transitions
+      released := changed & touch-mask-prev  // 1->0 transitions
+
+      // Fire callbacks per channel.
+      for i := 0; i < Mpr121.PHYSICAL-CHANNELS; i++:
+        bit := 1 << i
+        if (pressed & bit) != 0:
+          // Copy the list in case callbacks register/unregister during execution.
+          if touch-lambdas_.contains bit:
+            if touch-lambda-tasks_.contains bit and not touch-lambda-tasks_[bit].is-cancelled:
+              touch-lambda-tasks_[bit].cancel
+            touch-lambda-tasks_[bit] = task:: touch-lambdas_[bit]
+
+        if (released & bit) != 0:
+          if release-lambdas_.contains bit:
+            if release-lambda-tasks_.contains bit and not release-lambda-tasks_[bit].is-cancelled:
+              release-lambda-tasks_[bit].cancel
+            release-lambda-tasks_[bit] = task:: release-lambdas_[bit]
+
+      touch-mask-prev = touch-mask-new
+      intrpt-pin_.wait-for 0
+      sleep --ms=50
