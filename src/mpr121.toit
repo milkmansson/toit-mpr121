@@ -840,6 +840,8 @@ class Mpr121:
     value := read-register_ REG-ACCR1_
     logger_.debug "read-accr1-register: read REG-ACCR1_ has 0x$(%04x value) [$(bits-16_ value)]"
 
+  logger -> log.Logger:
+    return logger_
 
 /**
 Class to contain and handle blocks being used as callbacks
@@ -852,10 +854,10 @@ class Mpr121Events:
   logger_/log.Logger := ?
 
   runner-task_/Task? := null
-  touch-lambdas_/Map := {:}
-  touch-lambda-tasks_/Map := {:}
-  release-lambdas_/Map := {:}
-  release-lambda-tasks_/Map := {:}
+  touch-callbacks_/Map := {:}
+  touch-callback-tasks_/Map := {:}
+  release-callbacks_/Map := {:}
+  release-callback-tasks_/Map := {:}
 
   static CHANNEL-01 ::= 0b00000000_00000001
   static CHANNEL-02 ::= 0b00000000_00000010
@@ -890,12 +892,25 @@ class Mpr121Events:
       return
     logger_.debug "already started"
 
-  stop -> none:
-    // Remove any running tasks.
-    touch-lambda-tasks_.keys.do: | touch-mask |
-      touch-lambda-tasks_[touch-mask].cancel
-      touch-lambda-tasks_.remove touch-mask
+  stop-on-press-callbacks channel/int -> none:
+    assert: 0 < channel < 0xFFF
+    if touch-callback-tasks_.contains channel and not touch-callback-tasks_[channel].is-cancelled:
+      touch-callback-tasks_[channel].cancel
 
+  stop-on-release-callbacks channel/int -> none:
+    assert: 0 < channel < 0xFFF
+    if release-callback-tasks_.contains channel and not release-callback-tasks_[channel].is-cancelled:
+      release-callback-tasks_[channel].cancel
+
+  stop -> none:
+    // Remove any running touch tasks.
+    touch-callback-tasks_.keys.do: | mask |
+      touch-callback-tasks_[mask].cancel
+    touch-callback-tasks_.clear
+    // Remove any running release tasks.
+    release-callback-tasks_.keys.do: | mask |
+      release-callback-tasks_[mask].cancel
+    release-callback-tasks_.clear
     // Stop the runner.
     if running:
       runner-task_.cancel
@@ -904,14 +919,25 @@ class Mpr121Events:
     logger_.debug "already stopped"
 
 
-  on-touch channel/int lambda/Lambda -> none:
+  on-press channel/int --callback/Lambda -> none:
     assert: 0 < channel < 0xFFF
-    touch-lambdas_[channel] = lambda
+    touch-callbacks_[channel] = callback
 
-  remove-touch channel/int -> none:
+  on-release channel/int --callback/Lambda -> none:
     assert: 0 < channel < 0xFFF
-    if touch-lambdas_.contains channel:
-      touch-lambdas_.remove [channel]
+    release-callbacks_[channel] = callback
+
+  remove-on-press channel/int -> none:
+    assert: 0 < channel < 0xFFF
+    stop-on-press-callbacks channel
+    if touch-callbacks_.contains channel:
+      touch-callbacks_.remove [channel]
+
+  remove-on-release channel/int -> none:
+    assert: 0 < channel < 0xFFF
+    stop-on-release-callbacks channel
+    if release-callbacks_.contains channel:
+      release-callbacks_.remove [channel]
 
   wait-for-touch_ -> none:
     touch-mask-prev/int := 0
@@ -932,20 +958,20 @@ class Mpr121Events:
       released := changed & touch-mask-prev  // 1->0 transitions
 
       // Fire callbacks per channel.
-      for i := 0; i < Mpr121.PHYSICAL-CHANNELS; i++:
+      Mpr121.PHYSICAL-CHANNELS.repeat: | i |
         bit := 1 << i
         if (pressed & bit) != 0:
           // Copy the list in case callbacks register/unregister during execution.
-          if touch-lambdas_.contains bit:
-            if touch-lambda-tasks_.contains bit and not touch-lambda-tasks_[bit].is-cancelled:
-              touch-lambda-tasks_[bit].cancel
-            touch-lambda-tasks_[bit] = task:: touch-lambdas_[bit]
+          if touch-callbacks_.contains bit:
+            if touch-callback-tasks_.contains bit and not touch-callback-tasks_[bit].is-cancelled:
+              touch-callback-tasks_[bit].cancel
+            touch-callback-tasks_[bit] = task:: touch-callbacks_[bit]
 
         if (released & bit) != 0:
-          if release-lambdas_.contains bit:
-            if release-lambda-tasks_.contains bit and not release-lambda-tasks_[bit].is-cancelled:
-              release-lambda-tasks_[bit].cancel
-            release-lambda-tasks_[bit] = task:: release-lambdas_[bit]
+          if release-callbacks_.contains bit:
+            if release-callback-tasks_.contains bit and not release-callback-tasks_[bit].is-cancelled:
+              release-callback-tasks_[bit].cancel
+            release-callback-tasks_[bit] = task:: release-callbacks_[bit]
 
       touch-mask-prev = touch-mask-new
       intrpt-pin_.wait-for 0
