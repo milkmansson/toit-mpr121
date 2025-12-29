@@ -844,13 +844,12 @@ class Mpr121:
     return logger_
 
 /**
-Class to contain and handle blocks being used as callbacks
+Class to contain and handle blocks being used as callbacks.
 */
 class Mpr121Events:
-  static DEFAULT-POLL-WAIT-TIME_ ::= 20
 
   mpr_/Mpr121 := ?               // MPR121 driver object
-  intrpt-pin_ /gpio.Pin? := null // optional gpio.Pin
+  intrpt-pin_ /gpio.Pin? := null // Gpio.Pin
   logger_/log.Logger := ?
 
   runner-task_/Task? := null
@@ -859,25 +858,25 @@ class Mpr121Events:
   release-callbacks_/Map := {:}
   release-callback-tasks_/Map := {:}
 
-  static CHANNEL-01 ::= 0b00000000_00000001
-  static CHANNEL-02 ::= 0b00000000_00000010
-  static CHANNEL-03 ::= 0b00000000_00000100
-  static CHANNEL-04 ::= 0b00000000_00001000
-  static CHANNEL-05 ::= 0b00000000_00010000
-  static CHANNEL-06 ::= 0b00000000_00100000
-  static CHANNEL-07 ::= 0b00000000_01000000
-  static CHANNEL-08 ::= 0b00000000_10000000
-  static CHANNEL-09 ::= 0b00000001_00000000
-  static CHANNEL-10 ::= 0b00000010_00000000
-  static CHANNEL-11 ::= 0b00000100_00000000
-  static CHANNEL-12 ::= 0b00001000_00000000
+  static CHANNEL-00 ::= 0b00000000_00000001
+  static CHANNEL-01 ::= 0b00000000_00000010
+  static CHANNEL-02 ::= 0b00000000_00000100
+  static CHANNEL-03 ::= 0b00000000_00001000
+  static CHANNEL-04 ::= 0b00000000_00010000
+  static CHANNEL-05 ::= 0b00000000_00100000
+  static CHANNEL-06 ::= 0b00000000_01000000
+  static CHANNEL-07 ::= 0b00000000_10000000
+  static CHANNEL-08 ::= 0b00000001_00000000
+  static CHANNEL-09 ::= 0b00000010_00000000
+  static CHANNEL-10 ::= 0b00000100_00000000
+  static CHANNEL-11 ::= 0b00001000_00000000
 
   /** Constructor for use with an interrupt pin. */
-  constructor mpr121 --intrpt-pin/gpio.Pin --logger=log.default:
+  constructor mpr121 --intrpt-pin/gpio.Pin:
     mpr_ = mpr121
     intrpt-pin_ = intrpt-pin
     intrpt-pin_.configure --input --pull-up
-    logger_ = logger.with-name "mpr121.events"
+    logger_ = mpr_.logger.with-name "events"
     start
 
   /** Whether the runner task is running. */
@@ -894,12 +893,12 @@ class Mpr121Events:
 
   stop-on-press-callbacks channel/int -> none:
     assert: 0 < channel < 0xFFF
-    if touch-callback-tasks_.contains channel and not touch-callback-tasks_[channel].is-cancelled:
+    if touch-callback-tasks_.contains channel and not touch-callback-tasks_[channel].is-canceled:
       touch-callback-tasks_[channel].cancel
 
   stop-on-release-callbacks channel/int -> none:
     assert: 0 < channel < 0xFFF
-    if release-callback-tasks_.contains channel and not release-callback-tasks_[channel].is-cancelled:
+    if release-callback-tasks_.contains channel and not release-callback-tasks_[channel].is-canceled:
       release-callback-tasks_[channel].cancel
 
   stop -> none:
@@ -946,16 +945,15 @@ class Mpr121Events:
 
     while true:
       // Wait for interrupt.
-      intrpt-pin_.wait-for 1
+      intrpt-pin_.wait-for 0
       touch-mask-new = mpr_.touched
-
-      // If nothing changed, do nothing.
-      if touch-mask-prev == touch-mask-new: return
 
       // Bits that changed.
       changed := touch-mask-new ^ touch-mask-prev
       pressed := changed & touch-mask-new    // 0->1 transitions
       released := changed & touch-mask-prev  // 1->0 transitions
+
+      logger_.debug "interrupt tripped" --tags={"pressed":"$(%12b pressed)", "released":"$(%12b released)"}
 
       // Fire callbacks per channel.
       Mpr121.PHYSICAL-CHANNELS.repeat: | i |
@@ -963,16 +961,17 @@ class Mpr121Events:
         if (pressed & bit) != 0:
           // Copy the list in case callbacks register/unregister during execution.
           if touch-callbacks_.contains bit:
-            if touch-callback-tasks_.contains bit and not touch-callback-tasks_[bit].is-cancelled:
+            //logger_.debug "executing pressed $(%12b bit)"
+            if touch-callback-tasks_.contains bit and not touch-callback-tasks_[bit].is-canceled:
               touch-callback-tasks_[bit].cancel
-            touch-callback-tasks_[bit] = task:: touch-callbacks_[bit]
+            touch-callback-tasks_[bit] = task touch-callbacks_[bit]
 
         if (released & bit) != 0:
           if release-callbacks_.contains bit:
-            if release-callback-tasks_.contains bit and not release-callback-tasks_[bit].is-cancelled:
+            //logger_.debug "executing released $(%12b bit)"
+            if release-callback-tasks_.contains bit and not release-callback-tasks_[bit].is-canceled:
               release-callback-tasks_[bit].cancel
-            release-callback-tasks_[bit] = task:: release-callbacks_[bit]
+            release-callback-tasks_[bit] = task release-callbacks_[bit]
 
       touch-mask-prev = touch-mask-new
-      intrpt-pin_.wait-for 0
       sleep --ms=50

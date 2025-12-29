@@ -18,10 +18,50 @@ capacitances ranging from 10 pF to over 2000 pF with a resolution up to 0.01 pF.
 The device does this by varying the amount of charge current and charge time
 applied to the sensing inputs.
 
-## Not Yet Implemented
-At this time:
+### Package Features
+- Most functions specified in the datasheet are featured in the driver, `Mpr121`.
+- 'Callback'/Event handler feature has been added, `Mpr121Events`.
+
+### Not Yet Implemented
+- Proximity feature hasn't been implemented in `Mpr121Events`
 - GPIO function has not been implemented.
 - LED driver function has not yet been implemented.
+
+## Examples
+
+### Starting the Driver
+A starter pattern for the driver is shown in [this example](./examples/simple-touch-debugger.toit).
+
+### Touch Debugger
+After getting started, to simply see that something is being sensed/recognised
+by the driver, the interrupt pin could be wired to an LED and used.  In addition, the driver also has a rudimentary feature to print the binary mask of what is being touched, shown in [the example](./examples/simple-touch-debugger.toit).  This example does not require an interrupt pin be configured.
+```Toit
+// I2C setup omitted.
+
+// Start touch debugger.
+mpr121-driver.debug-touched
+
+// Stop touch debugger.
+mpr121-driver.stop-all-tasks
+```
+
+### Event Handler
+An event handler class has been written such that a Toit [Lambda](https://docs.toit.io/language/blocks-and-lambdas) can be assigned to a button.  The lambda will be executed on touch (or release) of the chosen sensor channel.  This version requires the use of a wired interrupt pin (pin 18 shown in this example):
+```Toit
+// I2C setup Omitted (see files in ./examples/).
+
+// Start the MPR121 device/driver:
+mpr121-device  := bus.device Mpr121.I2C-ADDRESS
+mpr121-driver  := Mpr121 mpr121-device --logger=logger
+
+// Start the event driver, supplying the mpr121-driver:
+event-driver = Mpr121Events mpr121-driver --intrpt-pin=(gpio.Pin 18)
+
+driver.on-press Mpr121Events.CHANNEL-03 --callback=(:: print "touch channel 03")
+driver.on-release Mpr121Events.CHANNEL-04 --callback=(:: print "touch channel 04")
+```
+Note: _Assigning Lambdas to a combinations of channel/touches, is not implemented
+yet._
 
 ## Issues
 If there are any issues, changes, or any other kind of feedback, please
