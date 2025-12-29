@@ -921,22 +921,30 @@ class Mpr121Events:
   on-press channel/int --callback/Lambda -> none:
     assert: 0 < channel < 0xFFF
     touch-callbacks_[channel] = callback
+    logger_.debug "on-press set" --tags={"channel":"$(channel)"}
 
   on-release channel/int --callback/Lambda -> none:
     assert: 0 < channel < 0xFFF
     release-callbacks_[channel] = callback
+    logger_.debug "on-release set" --tags={"channel":"$(channel)"}
+
+  remove channel/int -> none:
+    remove-on-press channel
+    remove-on-release channel
 
   remove-on-press channel/int -> none:
     assert: 0 < channel < 0xFFF
     stop-on-press-callbacks channel
     if touch-callbacks_.contains channel:
       touch-callbacks_.remove [channel]
+      logger_.debug "on-press removed" --tags={"channel":"$(channel)"}
 
   remove-on-release channel/int -> none:
     assert: 0 < channel < 0xFFF
     stop-on-release-callbacks channel
     if release-callbacks_.contains channel:
       release-callbacks_.remove [channel]
+      logger_.debug "on-release removed" --tags={"channel":"$(channel)"}
 
   wait-for-touch_ -> none:
     touch-mask-prev/int := 0

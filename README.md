@@ -56,8 +56,12 @@ mpr121-driver  := Mpr121 mpr121-device --logger=logger
 // Start the event driver, supplying the mpr121-driver:
 event-driver = Mpr121Events mpr121-driver --intrpt-pin=(gpio.Pin 18)
 
-driver.on-press Mpr121Events.CHANNEL-03 --callback=(:: print "touch channel 03")
-driver.on-release Mpr121Events.CHANNEL-04 --callback=(:: print "touch channel 04")
+mpr121-driver.on-press Mpr121Events.CHANNEL-03 --callback=(:: print "touch channel 03")
+mpr121-driver.on-release Mpr121Events.CHANNEL-04 --callback=(:: print "touch channel 04")
+
+// Remove tasks:
+mpr121-driver.remove Mpr121Events.CHANNEL-03
+
 ```
 Note: _Assigning Lambdas to a combinations of channel/touches, is not implemented
 yet._
