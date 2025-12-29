@@ -5,7 +5,7 @@
 import gpio
 import i2c
 import log
-import ..src.mpr121 as mpr121
+import mpr121 as mpr121
 
 /**
 Example starts I2C and connects to the MPR121.  Device starts a debugging task

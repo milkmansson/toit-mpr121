@@ -1,0 +1,5 @@
+prefixes:
+  mpr121: ..
+packages:
+  ..:
+    path: ..
