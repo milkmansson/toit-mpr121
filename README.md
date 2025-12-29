@@ -46,7 +46,7 @@ mpr121-driver.stop-all-tasks
 ```
 
 ### Event Handler
-An event handler class has been written such that a Toit [Lambda](https://docs.toit.io/language/blocks-and-lambdas) can be assigned to a button.  The lambda will be executed on touch (or release) of the chosen sensor channel.  This version requires the use of a wired interrupt pin (pin 18 shown in this example):
+An event handler class has been written such that a Toit [Lambda](https://docs.toit.io/language/blocks-and-lambdas) can be assigned to a button.  The lambda will be executed on touch (or release) of the chosen sensor channel.  This version requires the use of a wired interrupt pin (pin 18 shown in this example) - similar operation to the debug mechanism is possible, but not implemented in this code.
 ```Toit
 // I2C setup Omitted (see files in ./examples/).
 
