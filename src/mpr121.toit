@@ -7,7 +7,6 @@
 //   - C - https://github.com/adafruit/Adafruit_MPR121/blob/master/Adafruit_MPR121.cpp
 // See LICENSE-BSD and LICENSE-B-MIT for the original license texts.
 //
-//
 // Use of this source code is governed by an MIT-style license that can be
 // found in the package's LICENSE file.
 //
@@ -25,7 +24,7 @@ Datasheet: https://www.nxp.com/docs/en/data-sheet/MPR121.pdf
 */
 
 class Mpr121:
-  // Device can be configured between 0x58 and 0x5d
+  // Device can be configured between 0x58..0x5d.
   static I2C-ADDRESS       ::= 0x58
   static I2C-ADDRESS-58    ::= 0x58
   static I2C-ADDRESS-59    ::= 0x59
@@ -37,18 +36,18 @@ class Mpr121:
   static PHYSICAL-CHANNELS ::= 12
   static CHANNELS ::= 13
 
-  static PROXIMITY-MODE-DISABLED        := 0 // default set by this driver
+  static PROXIMITY-MODE-DISABLED        := 0 // Default set by this driver.
   static PROXIMITY-MODE-COMBINE-0-TO-1  := 1
   static PROXIMITY-MODE-COMBINE-0-TO-3  := 2
   static PROXIMITY-MODE-COMBINE-0-TO-11 := 3
 
   static BASELINE-TRACKING-DISABLED   := 0x01
-  static BASELINE-TRACKING-INIT-0     := 0x00 // default in chipset
+  static BASELINE-TRACKING-INIT-0     := 0x00 // Default in chipset.
   static BASELINE-TRACKING-INIT-5BIT  := 0x02
   static BASELINE-TRACKING-INIT-10BIT := 0x03
 
   static CHARGE-DISCHARGE-TIME-DISABLED := 0x00
-  static CHARGE-DISCHARGE-TIME-HALF-US  := 0x01 // default
+  static CHARGE-DISCHARGE-TIME-HALF-US  := 0x01 // Default.
   static CHARGE-DISCHARGE-TIME-1US      := 0x02
   static CHARGE-DISCHARGE-TIME-2US      := 0x03
   static CHARGE-DISCHARGE-TIME-4US      := 0x04
@@ -56,88 +55,92 @@ class Mpr121:
   static CHARGE-DISCHARGE-TIME-16US     := 0x06
   static CHARGE-DISCHARGE-TIME-32US     := 0x07
 
-  static FIRST-FILTER-ITERATIONS-6  := 0x00 // default
+  static FIRST-FILTER-ITERATIONS-6  := 0x00 // Default.
   static FIRST-FILTER-ITERATIONS-10 := 0x01
   static FIRST-FILTER-ITERATIONS-18 := 0x02
   static FIRST-FILTER-ITERATIONS-34 := 0x03
 
-  static SECOND-FILTER-ITERATIONS-4  := 0x00 // default
+  static SECOND-FILTER-ITERATIONS-4  := 0x00 // Default.
   static SECOND-FILTER-ITERATIONS-6  := 0x01
   static SECOND-FILTER-ITERATIONS-10 := 0x02
   static SECOND-FILTER-ITERATIONS-18 := 0x03
 
-/** Sample periods of the MPR121 - the time between capacitive readings.
-    Higher values consume less power, but are less responsive. */
+  /**
+  Sample periods of the MPR121 - the time between capacitive readings.
+    Higher values consume less power, but are less responsive.
+  */
   static SAMPLE-PERIOD-1MS   := 0x00
   static SAMPLE-PERIOD-2MS   := 0x01
   static SAMPLE-PERIOD-4MS   := 0x02
   static SAMPLE-PERIOD-8MS   := 0x03
-  static SAMPLE-PERIOD-16MS  := 0x04 // default
+  static SAMPLE-PERIOD-16MS  := 0x04 // Default.
   static SAMPLE-PERIOD-32MS  := 0x05
   static SAMPLE-PERIOD-64MS  := 0x06
   static SAMPLE-PERIOD-128MS := 0x07
 
-  // register addresses
+  // Register addresses.
   static REG-TOUCH-STATUS_        := 0x00  // = Low, high = 0x01
   static REG-OUT-OF-RANGE-STATUS_ := 0x02
   static REG-FILTERED-DATA0_      := 0x04  // = Low, high = 0x05
   static REG-BASELINE-DATA0_      := 0x1e
 
-  // general electrode touch sense baseline filters
-  // rising filter
+  // General electrode touch sense baseline filters.
+
+  // Rising filter.
   static REG-MHD-RISING_ ::= 0x2B
-  static REG-NHD-RISING_ ::= 0x2c // Amount
+  static REG-NHD-RISING_ ::= 0x2c // Amount.
   static REG-NCL-RISING_ ::= 0x2d
   static REG-FDL-RISING_ ::= 0x2e
 
-  // falling filter
+  // Falling filter.
   static REG-MHD-FALLING_ ::= 0x2f
   static REG-NHD-FALLING_ ::= 0x30
   static REG-NCL-FALLING_ ::= 0x31
   static REG-FDL-FALLING_ ::= 0x32
 
-  // touched filter
+  // Touched filter.
   static REG-NHD-TOUCHED_ ::= 0x33
   static REG-NCL-TOUCHED_ ::= 0x34
   static REG-FDL-TOUCHED_ ::= 0x35
 
-  // proximity electrode touch sense baseline filters
-  // rising filter
+  // Proximity electrode touch sense baseline filters.
+
+  // Rising filter.
   static REG-PROX-MHD-RISING_ ::= 0x36
   static REG-PROX-NHD-RISING_ ::= 0x37
   static REG-PROX-NCL-RISING_ ::= 0x38
   static REG-PROX-FDL-RISING_ ::= 0x39
 
-  // falling filter
+  // Falling filter.
   static REG-PROX-MHD-FALLING_ ::= 0x3a
   static REG-PROX-NHD-FALLING_ ::= 0x3b
   static REG-PROX-NCL-FALLING_ ::= 0x3c
   static REG-PROX-FDL-FALLING_ ::= 0x3d
 
-  // touched filter
+  // Touched filter.
   static REG-PROX-NHD-TOUCHED_ ::= 0x3e
   static REG-PROX-NCL-TOUCHED_ ::= 0x3f
   static REG-PROX-FDL-TOUCHED_ ::= 0x40
 
-  // electrode touch and release thresholds
+  // Electrode touch and release thresholds.
   static REG-TOUCH-THRESHOLD0_      ::= 0x41
   static REG-RELEASE-THRESHOLD0_    ::= 0x42
   static TOUCH-THRESHOLD-DEFAULT_   ::= 40
   static RELEASE-THRESHOLD-DEFAULT_ ::= 20
 
-  // debounce settings
+  // Debounce settings.
   static REG-DEBOUNCE_            ::= 0x5B
   static DEBOUNCE-RELEASE-MASK_   ::= 0b0111_0000
   static DEBOUNCE-RELEASE-OFFSET_ ::= 4
   static DEBOUNCE-TOUCH-MASK_     ::= 0b0000_0111
   static DEBOUNCE-TOUCH-OFFSET_   ::= 0
 
-  // channel charge-discharge CURRENTS
+  // Channel charge-discharge CURRENTS.
   static REG-CDC0_                     ::= 0x5f
   static CHARGE-DISCHARGE-CURRENT-MIN_ ::= 0     // 0 = defer to global
   static CHARGE-DISCHARGE-CURRENT-MAX_ ::= 63
 
-  // channel charge-discharge TIMES
+  // Channel charge-discharge TIMES.
   static REG-CDT0_             ::= 0x6c
   static CDT-CHARGE-TIME-MASK_ ::= 0x07
   static CDT-FIELD-DIVISOR_    ::= 2
@@ -153,20 +156,20 @@ class Mpr121:
   static REG-GPIO-CLR_  ::= 0x79
   static REG-GPIO-TOG_  ::= 0x7a
 
-  // Configuration registers
+  // Configuration registers.
   static REG-FILTER-GLOBAL-CDC_     ::= 0x5c
   static REG-FILTER-GLOBAL-CDT_     ::= 0x5d
   static FILTER-GLOBAL-CDC-DEFAULT_ ::= 0b0001_0000
   static FILTER-GLOBAL-CDT-DEFAULT_ ::= 0b0010_0100
 
-  //auto-config
+  // Auto-config.
   static REG-ACCR0_ ::= 0x7b
   static REG-ACCR1_ ::= 0x7c
   static REG-USL_   ::= 0x7d  // Upper Limit
   static REG-LSL_   ::= 0x7e  // Lower Limit
   static REG-TL_    ::= 0x7f  // Target Limit
 
-  //soft reset
+  // Soft reset.
   static REG-SOFT-RESET_   ::= 0x80
   static SOFT-RESET-VALUE_ ::= 0x63
 
@@ -176,7 +179,7 @@ class Mpr121:
   //static PWM2_ ::= 0x83
   //static PWM3_ ::= 0x84
 
-  //ECR
+  // ECR
   static REG-ECR_                      ::= 0x5e
   static ECR-ELECTRODE-MASK_           ::= 0b0000_1111
   static ECR-PROXIMITY-MASK_           ::= 0b0011_0000
@@ -184,14 +187,14 @@ class Mpr121:
 
   static BASELINE-DATA-BIT-SHIFT_      ::= 2
 
-  //Other Statics
+  // Other Statics.
   static OVER-CURRENT-REXT_         ::= 0b1000_0000_0000_0000
   static TOUCH-STATUS-MASK-BASE_    ::= 0x1FFF
   static OUT-OF-RANGE-STATUS-ACFF_  ::= 0x8000
   static OUT-OF-RANGE-STATUS-ARFF_  ::= 0x4000
 
 
-  // Baseline Configuration
+  // Baseline Configuration (Janelia).
   static BASELINE-CONFIGURATION-JANELIA_/Map   ::= {
     REG-MHD-RISING_       : 0x01,
     REG-NHD-RISING_       : 0x01,
@@ -224,7 +227,7 @@ class Mpr121:
 
   static DEFAULT-REGISTER-WIDTH_ ::= 8
 
-  // Globals
+  // Globals.
   reg_/registers.Registers := ?
   logger_/log.Logger := ?
   touch-status-mask_/int := 0
