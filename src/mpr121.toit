@@ -38,44 +38,44 @@ class Mpr121:
   static CHANNELS ::= 13
 
   static PROXIMITY-MODE-DISABLED        := 0 // default set by this driver
-  static PROXIMITY-MODE-COMBINE_0_TO_1  := 1
-  static PROXIMITY-MODE-COMBINE_0_TO_3  := 2
-  static PROXIMITY-MODE-COMBINE_0_TO_11 := 3
+  static PROXIMITY-MODE-COMBINE-0-TO-1  := 1
+  static PROXIMITY-MODE-COMBINE-0-TO-3  := 2
+  static PROXIMITY-MODE-COMBINE-0-TO-11 := 3
 
   static BASELINE-TRACKING-DISABLED   := 0x01
   static BASELINE-TRACKING-INIT-0     := 0x00 // default in chipset
   static BASELINE-TRACKING-INIT-5BIT  := 0x02
   static BASELINE-TRACKING-INIT-10BIT := 0x03
 
-  static CHARGE_DISCHARGE_TIME_DISABLED := 0x00
-  static CHARGE_DISCHARGE_TIME_HALF_US  := 0x01 // default
-  static CHARGE_DISCHARGE_TIME_1US      := 0x02
-  static CHARGE_DISCHARGE_TIME_2US      := 0x03
-  static CHARGE_DISCHARGE_TIME_4US      := 0x04
-  static CHARGE_DISCHARGE_TIME_8US      := 0x05
-  static CHARGE_DISCHARGE_TIME_16US     := 0x06
-  static CHARGE_DISCHARGE_TIME_32US     := 0x07
+  static CHARGE-DISCHARGE-TIME-DISABLED := 0x00
+  static CHARGE-DISCHARGE-TIME-HALF-US  := 0x01 // default
+  static CHARGE-DISCHARGE-TIME-1US      := 0x02
+  static CHARGE-DISCHARGE-TIME-2US      := 0x03
+  static CHARGE-DISCHARGE-TIME-4US      := 0x04
+  static CHARGE-DISCHARGE-TIME-8US      := 0x05
+  static CHARGE-DISCHARGE-TIME-16US     := 0x06
+  static CHARGE-DISCHARGE-TIME-32US     := 0x07
 
-  static FIRST_FILTER_ITERATIONS_6  := 0x00 // default
-  static FIRST_FILTER_ITERATIONS_10 := 0x01
-  static FIRST_FILTER_ITERATIONS_18 := 0x02
-  static FIRST_FILTER_ITERATIONS_34 := 0x03
+  static FIRST-FILTER-ITERATIONS-6  := 0x00 // default
+  static FIRST-FILTER-ITERATIONS-10 := 0x01
+  static FIRST-FILTER-ITERATIONS-18 := 0x02
+  static FIRST-FILTER-ITERATIONS-34 := 0x03
 
-  static SECOND_FILTER_ITERATIONS_4  := 0x00 // default
-  static SECOND_FILTER_ITERATIONS_6  := 0x01
-  static SECOND_FILTER_ITERATIONS_10 := 0x02
-  static SECOND_FILTER_ITERATIONS_18 := 0x03
+  static SECOND-FILTER-ITERATIONS-4  := 0x00 // default
+  static SECOND-FILTER-ITERATIONS-6  := 0x01
+  static SECOND-FILTER-ITERATIONS-10 := 0x02
+  static SECOND-FILTER-ITERATIONS-18 := 0x03
 
 /** Sample periods of the MPR121 - the time between capacitive readings.
     Higher values consume less power, but are less responsive. */
-  static SAMPLE_PERIOD_1MS   := 0x00
-  static SAMPLE_PERIOD_2MS   := 0x01
-  static SAMPLE_PERIOD_4MS   := 0x02
-  static SAMPLE_PERIOD_8MS   := 0x03
-  static SAMPLE_PERIOD_16MS  := 0x04 // default
-  static SAMPLE_PERIOD_32MS  := 0x05
-  static SAMPLE_PERIOD_64MS  := 0x06
-  static SAMPLE_PERIOD_128MS := 0x07
+  static SAMPLE-PERIOD-1MS   := 0x00
+  static SAMPLE-PERIOD-2MS   := 0x01
+  static SAMPLE-PERIOD-4MS   := 0x02
+  static SAMPLE-PERIOD-8MS   := 0x03
+  static SAMPLE-PERIOD-16MS  := 0x04 // default
+  static SAMPLE-PERIOD-32MS  := 0x05
+  static SAMPLE-PERIOD-64MS  := 0x06
+  static SAMPLE-PERIOD-128MS := 0x07
 
   // register addresses
   static REG-TOUCH-STATUS_        := 0x00  // = Low, high = 0x01
@@ -144,14 +144,14 @@ class Mpr121:
   static CDT-FIELD-OFFSET_     ::= 4
 
   // GPIO
-  static REG_GPIO-CTL0_ ::= 0x73
-  static REG_GPIO-CTL1_ ::= 0x74
-  static REG_GPIO-DAT_  ::= 0x75
-  static REG_GPIO-DIR_  ::= 0x76
-  static REG_GPIO-EN_   ::= 0x77
-  static REG_GPIO-SET_  ::= 0x78
-  static REG_GPIO-CLR_  ::= 0x79
-  static REG_GPIO-TOG_  ::= 0x7a
+  static REG-GPIO-CTL0_ ::= 0x73
+  static REG-GPIO-CTL1_ ::= 0x74
+  static REG-GPIO-DAT_  ::= 0x75
+  static REG-GPIO-DIR_  ::= 0x76
+  static REG-GPIO-EN_   ::= 0x77
+  static REG-GPIO-SET_  ::= 0x78
+  static REG-GPIO-CLR_  ::= 0x79
+  static REG-GPIO-TOG_  ::= 0x7a
 
   // Configuration registers
   static REG-FILTER-GLOBAL-CDC_     ::= 0x5c
