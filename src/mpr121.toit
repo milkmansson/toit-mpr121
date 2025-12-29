@@ -548,14 +548,7 @@ class Mpr121:
     shift     := (CDT-FIELD-OFFSET_ * (channel % CDT-FIELD-DIVISOR_))
     return read-register_ register --mask=CDT-CHARGE-TIME-MASK_ --offset=shift
 
-  /** GPIO and LED Driver function
-      Among the 12 electrode inputs, 8 inputs are designed as multifunctional pins (D0 - D7 bits in the register correspond to GPIO and LED functions on ELE4 - ELE11). When these pins are not configured as electrodes, they may be used to drive LEDs or used for general purpose input or output. For more details on this feature, please refer to application note AN3894.
-      https://www.nxp.com/docs/en/application-note/AN3894.pdf
 
-      Note: The number of touch sensing electrodes, and therefore the number of GPIO ports left available is configured by the ECR (0x5E) and GPIO Enable Register (0x77). ECR has higher priority and overrides the GPIO enabled in 0x77 - that is, when a pin is enabled as GPIO but is also selected as electrode by ECR, the GPIO function is disabled immediately and it becomes an electrode during Run Mode.
-
-      Note: Be aware that the channels/electrodes cannot be turned on or off without following the 'total number of touch channels enabled' sequence.  This means that using the first 6 channels for touch and wanting to use the second channel for GPIO, won't work.  This means that using the higher end channels for GPIO might need to be done first, and then to start reducing the number of channels for touch one by one.
-      */
 /*
   gpio-pin-function --pin/int --disable -> none:
     assert: 4 <= pin <= 11
@@ -851,6 +844,8 @@ class Mpr121Events:
   mpr_/Mpr121 := ?               // MPR121 driver object
   intrpt-pin_ /gpio.Pin? := null // Gpio.Pin
   logger_/log.Logger := ?
+
+  last-touch-mask/int := 0
 
   runner-task_/Task? := null
   touch-callbacks_/Map := {:}
