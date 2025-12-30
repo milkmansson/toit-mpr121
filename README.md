@@ -1,14 +1,9 @@
 # Toit Driver library for the MPR121 Touch/Proximity sensor
 This is a Toit driver for the MPR121 is a capacitive touch sensor controller,
 made by NXP Semiconductors.  It detects when a finger (or any conductive object)
-approaches or touches one of the pads.
-- There are versions of this chipset made by Seeedstudio
-
-## To Do:
-- Sort/deduplicate stop functions in `Mpr121Events`
-- Proximity example.
-
-
+approaches or touches one of the pads.  There are versions of this chipset made
+by Seeedstudio and others. Check pinouts as not all pins from the MPR121 are
+exposed in all cases.
 
 > [!WARNING]
 > This driver is functional but still under development.
