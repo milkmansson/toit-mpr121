@@ -20,12 +20,23 @@ In this example, output and function will be similar to 'simple-touch-debugger',
 This example also shows how to set the desired project logging level.
 
 Note that for this example, the 13th bit is set *ALONGSIDE* the pins to be
-combined to the proximity sensor:
+combined to the proximity sensor.  Also note that if debugging is enabled, all
+pin triggers are displayed, but only the touch event for Channel 02 executes the
+indicated lambda function, as an example:
+
 ```
-[mpr121] DEBUG: debug-touched: 0001.0000.0000.0111
-[mpr121] DEBUG: debug-touched: 0001.0000.0000.0111
-[mpr121] DEBUG: debug-touched: 0001.0000.0000.0111
-[mpr121] DEBUG: debug-touched: 0001.0000.0000.0111
+[mpr121.events] DEBUG: interrupt tripped {touched:             0, released:  111100000111}
+[mpr121.events] DEBUG: interrupt tripped {touched: 1110100000111, released:             0}
+CHANNEL-02 touched.
+[mpr121.events] DEBUG: interrupt tripped {touched:          1000, released:             0}
+[mpr121.events] DEBUG: interrupt tripped {touched:             0, released: 1110100001010}
+[mpr121.events] DEBUG: interrupt tripped {touched:             0, released:           101}
+[mpr121.events] DEBUG: interrupt tripped {touched:  110000000000, released:             0}
+[mpr121.events] DEBUG: interrupt tripped {touched:           111, released:             0}
+CHANNEL-02 touched.
+[mpr121.events] DEBUG: interrupt tripped {touched:             0, released:  110000000000}
+[mpr121.events] DEBUG: interrupt tripped {touched:             0, released:           111}
+[mpr121.events] DEBUG: interrupt tripped {touched:  111000000101, released:             0}
 ```
 */
 
@@ -66,7 +77,7 @@ main:
     // Set some rudimentary touch events - display text if a button is touched.
     mpr121-events := Mpr121Events mpr121-driver --intrpt-pin=(gpio.Pin INTERRUPT-PIN)
 
-    logger.warn "INTERRUPT-PIN $INTERRUPT-PIN needs to be tied to INT on MPR121"
+    logger.warn "INTERRUPT-PIN $INTERRUPT-PIN needs to be tied to INT on MPR121."
 
     // Attach event to the touch of the pin
     mpr121-events.on-touch Mpr121Events.CHANNEL-02 --callback=(:: print "CHANNEL-02 touched.")
