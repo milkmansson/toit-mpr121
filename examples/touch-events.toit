@@ -34,10 +34,11 @@ SDA-PIN := 8
 SCL-PIN := 9
 FREQUENCY := 400_000
 I2C-ADDRESS := 0x5a
+INTERRUPT-PIN := 4
 
 main:
   // Establish Log.
-  logger := log.default.with-name "proximity-test"
+  logger := log.default.with-name "callback-test"
 
   // To enable DEBUG level.
   logger.with-level log.DEBUG-LEVEL
@@ -62,5 +63,10 @@ main:
     // Set Proximity for combining channels 0-3
     mpr121-driver.proximity-mode Mpr121.PROXIMITY-MODE-COMBINE-0-TO-3
 
-    // Enable simple touch debugging - note CHANNEL-13 is proximity channel.
-    mpr121-driver.debug-touched
+    // Set some rudimentary touch events - display text if a button is touched.
+    mpr121-events := Mpr121Events mpr121-driver --intrpt-pin=(gpio.Pin INTERRUPT-PIN)
+
+    logger.warn "INTERRUPT-PIN $INTERRUPT-PIN needs to be tied to INT on MPR121"
+
+    // Attach event to the touch of the pin
+    mpr121-events.on-touch Mpr121Events.CHANNEL-02 --callback=(:: print "CHANNEL-02 touched.")

@@ -1003,7 +1003,7 @@ class Mpr121Events:
       touched := changed & touch-mask-new    // 0 -> 1 transitions
       released := changed & touch-mask-prev  // 1 -> 0 transitions
 
-      logger_.debug "interrupt tripped" --tags={"touched":"$(%12b touched)", "released":"$(%12b released)"}
+      logger_.debug "interrupt tripped" --tags={"touched":"$(%13b touched)", "released":"$(%13b released)"}
 
       // Fire callbacks per channel.
       Mpr121.ALL-CHANNELS.repeat: | i |
