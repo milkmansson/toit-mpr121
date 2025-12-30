@@ -19,6 +19,14 @@ In this example, output and function will be similar to 'simple-touch-debugger',
 
 This example also shows how to set the desired project logging level.
 
+Note that for this example, the 13th bit is set *ALONGSIDE* the pins to be
+combined to the proximity sensor:
+```
+[mpr121] DEBUG: debug-touched: 0001.0000.0000.0111
+[mpr121] DEBUG: debug-touched: 0001.0000.0000.0111
+[mpr121] DEBUG: debug-touched: 0001.0000.0000.0111
+[mpr121] DEBUG: debug-touched: 0001.0000.0000.0111
+```
 */
 
 // Please set these correctly for your device:

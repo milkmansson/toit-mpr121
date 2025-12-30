@@ -175,9 +175,9 @@ class Mpr121:
 
   // ECR
   static REG-ECR_                      ::= 0x5e
-  static ECR-ELECTRODE-MASK_           ::= 0b0000_1111
-  static ECR-PROXIMITY-MASK_           ::= 0b0011_0000
-  static ECR-CONFIGURATION-LOCK-MASK_  ::= 0b1100_0000
+  static ECR-ELECTRODE-MASK_           ::= 0b00001111
+  static ECR-PROXIMITY-MASK_           ::= 0b00110000
+  static ECR-CONFIGURATION-LOCK-MASK_  ::= 0b11000000
 
   // Set in register $ECR in $ECR-PROXIMITY-MASK_
   static PROXIMITY-MODE-DISABLED        := 0b00 // Default set by this driver.
@@ -367,15 +367,6 @@ class Mpr121:
     output := value & TOUCH-STATUS-MASK-BASE_
     return output
 
-  stop-all-channels -> none:
-    last-ecr-register_ = reg_.read-u8 REG-ECR_
-    logger_.debug "stop all channels" --tags={"register-backup": "$(bits-16_ last-ecr-register_)"}
-    write-register_ REG-ECR_ 0x0
-
-  start-all-channels -> none:
-    write-register_ REG-ECR_ last-ecr-register_
-    logger_.debug "start all channels" --tags={"register-restore": "$(bits-16_ last-ecr-register_)"}
-
   /**
   Clears the 'overcurrent' flag.
 
@@ -440,9 +431,23 @@ class Mpr121:
   */
   proximity-mode mode/int -> none:
     assert: 0 <= mode <= 3
-    stop-all-channels
-    write-register_ REG-ECR_ mode --mask=ECR-PROXIMITY-MASK_
-    start-all-channels
+    stop-mode
+    // Stop mode backs up the register for later turning on, however the bits
+    // we need to write for this function are also in there.  So intercept that
+    // backup, and replace with $mode bits to be written in run mode again.
+    new-register := (last-ecr-register_ & ~ECR-PROXIMITY-MASK_) | ((mode << ECR-PROXIMITY-MASK_.count-trailing-zeros) & ECR-PROXIMITY-MASK_)
+    run-mode --replace-enable-bits=new-register
+    logger_.info "set proximity mode" --tags={"mode":"$mode"}
+
+  stop-mode -> none:
+    last-ecr-register_ = read-register_ REG-ECR_
+    write-register_ REG-ECR_ 0
+    logger_.debug "stop mode"
+
+  run-mode --replace-enable-bits=last-ecr-register_ -> none:
+    write-register_ REG-ECR_ replace-enable-bits
+    logger_.debug "run mode"
+
 
   /**
   Sets Configuration Lock register.
@@ -643,16 +648,34 @@ class Mpr121:
     logger_.debug "gpio-pin-function  enable lo-side-open-drain on pin $(pin)" // from=$(bits-16_ old-value) to=$(bits-16_ new-value)"
     sleep --ms=1
 
-  /** get-gpio-pin: returns DAT for the pin.
-      When a GPIO is enabled as an output, the GPIO port outputs the corresponding DAT bit level from GPIO Data Register (0x075). The output level toggle remains on during any electrode charging. The level transition will occur after the ADC conversion takes place. It is important to note that reading this register returns the content of the GPIO Data Register, (not a level of the port). When a GPIO is configured as input, reading this register returns the latched input level of the corresponding port (not contents of the GPIO Data Register). Writing to the DAT changes content of the register, but does not effect the input function
-      */
+  /**
+  Get-gpio-pin: returns DAT for the pin.
+
+  When a GPIO is enabled as an output, the GPIO port outputs the corresponding
+    DAT bit level from GPIO Data Register (0x075). The output level toggle remains
+    on during any electrode charging. The level transition will occur after the
+    ADC conversion takes place. It is important to note that reading this register
+    returns the content of the GPIO Data Register, (not a level of the port). When
+    a GPIO is configured as input, reading this register returns the latched input
+    level of the corresponding port (not contents of the GPIO Data Register).
+    Writing to the DAT changes content of the register, but does not effect the
+    input function
+  */
   get-gpio-pin --pin/int --get -> int:
     old-DAT-reg-value := reg_.read-u8 GPIO-DAT-REGISTER-ADDRESS_
     return  (old-DAT-reg-value & (1 << pin - 4))
 
-  /** other GPIO functions:
-      Writing "1" into the corresponding bits of GPIO Data Set Register, GPIO Data Clear Register, and GPIO Data Toggle Register will set/clear/toggle contents of the corresponding DAT bit in Data Register.  These functions are reproduced here.  (Writing "0" has no meaning.)  These registers allow any individual port(s) to be set, cleared, or toggled individually without affecting other ports. It is important to note that reading these registers returns the contents of the GPIO Data Register reading.
-      */
+  /**
+  Other GPIO functions:
+
+  Writing "1" into the corresponding bits of GPIO Data Set Register, GPIO Data
+    Clear Register, and GPIO Data Toggle Register will set/clear/toggle contents
+    of the corresponding DAT bit in Data Register.  These functions are
+    reproduced here.  (Writing "0" has no meaning.)  These registers allow any
+    individual port(s) to be set, cleared, or toggled individually without
+    affecting other ports. It is important to note that reading these registers
+    returns the contents of the GPIO Data Register reading.
+  */
   set-gpio-pin --pin/int --set -> none:
     old-SET-reg-value := reg_.read-u8 GPIO-SET-REGISTER-ADDRESS_
     new-SET-reg-value := (old-SET-reg-value |  (1 << pin - 4))                //1 in SET
@@ -869,10 +892,19 @@ class Mpr121Events:
   static CHANNEL-09 ::= 0b00000010_00000000
   static CHANNEL-10 ::= 0b00000100_00000000
   static CHANNEL-11 ::= 0b00001000_00000000
+  static CHANNEL-12 ::= 0b00010000_00000000 // Proximity Channel, if enabled.
 
-  /** Constructor for use with an interrupt pin. */
-  constructor mpr121 --intrpt-pin/gpio.Pin:
-    mpr_ = mpr121
+  /** Constructor for use with an existing MPR121 & interrupt pin. */
+  constructor mpr121-driver/Mpr121 --intrpt-pin/gpio.Pin:
+    mpr_ = mpr121-driver
+    intrpt-pin_ = intrpt-pin
+    intrpt-pin_.configure --input --pull-up
+    logger_ = mpr_.logger.with-name "events"
+    start
+
+  /** Convenience constructor which builds the prerequisite MPR121 class. */
+  constructor --device/serial.Device --intrpt-pin/gpio.Pin --logger/log.Logger=log.default:
+    mpr_ = Mpr121 device --logger=logger
     intrpt-pin_ = intrpt-pin
     intrpt-pin_.configure --input --pull-up
     logger_ = mpr_.logger.with-name "events"
@@ -884,22 +916,26 @@ class Mpr121Events:
       return false
     return not runner-task_.is-canceled
 
+  /** Starts the task that waits for the interrupt pin. */
   start -> none:
     if not running:
       runner-task_ = task:: wait-for-touch_
       return
     logger_.debug "already started"
 
-  stop-on-press-callbacks channel/int -> none:
+  /** Removes touch lambdas/callbacks for a specified pin. */
+  stop-on-touch-callbacks channel/int -> none:
     assert: 0 < channel < 0xFFF
     if touch-callback-tasks_.contains channel and not touch-callback-tasks_[channel].is-canceled:
       touch-callback-tasks_[channel].cancel
 
+  /** Removes release lambdas/callbacks for a specified pin. */
   stop-on-release-callbacks channel/int -> none:
     assert: 0 < channel < 0xFFF
     if release-callback-tasks_.contains channel and not release-callback-tasks_[channel].is-canceled:
       release-callback-tasks_[channel].cancel
 
+  /** Stops all tasks related to waiting for interrupt pin events. */
   stop -> none:
     // Remove any running touch tasks.
     touch-callback-tasks_.keys.do: | mask |
@@ -916,27 +952,28 @@ class Mpr121Events:
       return
     logger_.debug "already stopped"
 
-
-  on-press channel/int --callback/Lambda -> none:
+  /** Stores a lambda for the $channel pin.  */
+  on-touch channel/int --callback/Lambda -> none:
     assert: 0 < channel < 0xFFF
     touch-callbacks_[channel] = callback
-    logger_.debug "on-press set" --tags={"channel":"$(channel)"}
+    logger_.debug "on-touch set" --tags={"channel":"$(channel)"}
 
+  /** Stores a lambda for releasing the $channel pin. */
   on-release channel/int --callback/Lambda -> none:
     assert: 0 < channel < 0xFFF
     release-callbacks_[channel] = callback
     logger_.debug "on-release set" --tags={"channel":"$(channel)"}
 
   remove channel/int -> none:
-    remove-on-press channel
+    remove-on-touch channel
     remove-on-release channel
 
-  remove-on-press channel/int -> none:
+  remove-on-touch channel/int -> none:
     assert: 0 < channel < 0xFFF
-    stop-on-press-callbacks channel
+    stop-on-touch-callbacks channel
     if touch-callbacks_.contains channel:
       touch-callbacks_.remove [channel]
-      logger_.debug "on-press removed" --tags={"channel":"$(channel)"}
+      logger_.debug "on-touch removed" --tags={"channel":"$(channel)"}
 
   remove-on-release channel/int -> none:
     assert: 0 < channel < 0xFFF
@@ -945,6 +982,12 @@ class Mpr121Events:
       release-callbacks_.remove [channel]
       logger_.debug "on-release removed" --tags={"channel":"$(channel)"}
 
+  /**
+  Waits for touch input.
+
+  Using the pin specified in the constructor, the code waits for touch/release
+    inputs.  When a touch event occurs, look in the maps for lambdas to execute.
+  */
   wait-for-touch_ -> none:
     touch-mask-prev/int := 0
     touch-mask-new/int := 0
@@ -957,18 +1000,18 @@ class Mpr121Events:
 
       // Bits that changed.
       changed := touch-mask-new ^ touch-mask-prev
-      pressed := changed & touch-mask-new    // 0->1 transitions
-      released := changed & touch-mask-prev  // 1->0 transitions
+      touched := changed & touch-mask-new    // 0 -> 1 transitions
+      released := changed & touch-mask-prev  // 1 -> 0 transitions
 
-      logger_.debug "interrupt tripped" --tags={"pressed":"$(%12b pressed)", "released":"$(%12b released)"}
+      logger_.debug "interrupt tripped" --tags={"touched":"$(%12b touched)", "released":"$(%12b released)"}
 
       // Fire callbacks per channel.
       Mpr121.ALL-CHANNELS.repeat: | i |
         bit := 1 << i
-        if (pressed & bit) != 0:
+        if (touched & bit) != 0:
           // Copy the list in case callbacks register/unregister during execution.
           if touch-callbacks_.contains bit:
-            //logger_.debug "executing pressed $(%12b bit)"
+            //logger_.debug "executing touched $(%12b bit)"
             if touch-callback-tasks_.contains bit and not touch-callback-tasks_[bit].is-canceled:
               touch-callback-tasks_[bit].cancel
             touch-callback-tasks_[bit] = task touch-callbacks_[bit]
