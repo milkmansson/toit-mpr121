@@ -271,7 +271,7 @@ class Mpr121:
   Sets the number of touch pins enabled
 
   Must be set as a contiguous group, a number of consecutive pins from pin 0.
-   Cannot enable/disable them individually.
+    Cannot enable/disable them individually.
   */
   touch-pins-enabled --number-of-pins/int -> none:
     assert: 0 <= number-of-pins <= 12
@@ -283,15 +283,14 @@ class Mpr121:
   Set the touch and release thresholds for all channels.
 
   The threshold is defined as a deviation value from the baseline value, so it
-   remains constant even if the baseline value changes. Typically the touch
-   threshold is a little bigger than the release threshold to touch debounce and
-   hysteresis. For typical touch application, the value can be in range
-   0x05~0x30. The setting of the threshold is depended on the actual application.
+    remains constant even if the baseline value changes. Typically the touch
+    threshold is a little bigger than the release threshold to touch debounce and
+    hysteresis. For typical touch application, the value can be in range
+    0x05~0x30. The setting of the threshold is depended on the actual application.
 
   For operational details and how to set the threshold refer to application note
-  AN3892 and MPR121 design guidelines.
-   - touch: the touch threshold value from 0 to 255.
-   - release: the release threshold from 0 to 255.
+    AN3892 and MPR121 design guidelines.  $touch =the touch threshold value from
+    0 to 255. $release: the release threshold, from 0 to 255.
 
   For a specfic channel - higher values = less sensitive
 
@@ -335,9 +334,9 @@ class Mpr121:
   Reads the filtered data from specified channel.
 
   The ADC raw data outputs run through 3 levels of digital filtering to filter
-   out the high frequency and low frequency noise encountered. For detailed
-   information on this filtering see page 6 of the device datasheet.  Returns the
-   filtered reading, as a 10 bit unsigned value.
+    out the high frequency and low frequency noise encountered. For detailed
+    information on this filtering see page 6 of the device datasheet.  Returns the
+    filtered reading, as a 10 bit unsigned value.
   */
   read-filtered-channel-data --channel -> int:
     if (channel > 12): return 0
@@ -347,8 +346,8 @@ class Mpr121:
   Returns the baseline value for the channel.
 
   The 3rd level filtered result is internally 10bit but only high 8 bits are
-   readable from registers 0x1E~0x2A as the baseline value output for each
-   channel.
+    readable from registers 0x1E~0x2A as the baseline value output for each
+    channel.
   */
   read-baseline-channel-data --channel -> int:
     if (channel > 12): return 0
@@ -359,8 +358,8 @@ class Mpr121:
   Reads the touch status of all 13 channels as a bit mask.
 
   Returns a 12 bit integer with each bit corresponding to the touch status of a
-   sensor channel. For example, if bit 5 is equal to 1, then that channel of
-   the device is currently deemed to be touched.
+    sensor channel. For example, if bit 5 is equal to 1, then that channel of
+    the device is currently deemed to be touched.
   */
   touched -> int:
     value := reg_.read-u16-le REG-TOUCH-STATUS_
@@ -371,12 +370,12 @@ class Mpr121:
   Clears the 'overcurrent' flag.
 
   When over current detected, the OVCF bit 0b1000_0000 is set on the pin status
-   register, and MPR121 goes to Stop Mode immediately. The ExTS bits in status
-   registers,output registers 0x04~0x2A, and bit D5~D0 in ECR will be also
-   cleared on over current condition. When the bit is "1", writing ECR register
-   (to try to enter Run mode) will be discarded.  Write "1" to OVCF will clear
-   this bit and MPR121 fault condition is cleared so that MPR121 can be
-   configured into Run Mode again.
+    register, and MPR121 goes to Stop Mode immediately. The ExTS bits in status
+    registers,output registers 0x04~0x2A, and bit D5~D0 in ECR will be also
+    cleared on over current condition. When the bit is "1", writing ECR register
+    (to try to enter Run mode) will be discarded.  Write "1" to OVCF will clear
+    this bit and MPR121 fault condition is cleared so that MPR121 can be
+    configured into Run Mode again.
   */
   clear-overcurrent-flag -> none:
     reg_.write-u16-le REG-TOUCH-STATUS_ OVER-CURRENT-REXT_
@@ -398,9 +397,9 @@ class Mpr121:
   Sets release debounce on all channels for the device.
 
   A channels' status change will only take place after the number of consecutive
-   touch or release detection meets the debounce number. If the number detected
-   does not meet the debounce number, the status will not change.  Valid values
-   are 0-7
+    touch or release detection meets the debounce number. If the number detected
+    does not meet the debounce number, the status will not change.  Valid values
+    are 0-7
   */
   set-release-debounce release/int -> none:
     assert: 0 <= release <= 7
@@ -417,16 +416,21 @@ class Mpr121:
 
   /**
   Sets the number of channels to consumed for virtual "13th" proximity
-  channel.
+    channel.
 
   When configured, enables the use of a 13th channel, used for a single
-  'Proximity Detection' channel.  This requires a number of the existing
-  channels, and this configuration selects how many of them are to be used:
-  - 0 - 0b00 - Proximity Detection is disabled (Default)
-  - 1 - 0b01 - Run Mode with ELE0~ELE1 combined for proximity detection enabled
-  - 2 - 0b10 - Run Mode with ELE0~ELE3 combined for proximity detection enabled
-  - 3 - 0b11 - Run Mode with ELE0~ELE11 (all 12 channels) combined for the
-               single proximity detection channel enabled
+    'Proximity Detection' channel.  This requires a number of the existing
+    channels, and this configuration selects how many of them are to be used:
+
+  0b00 - Proximity Detection is disabled (Default)
+
+  0b01 - Run Mode with ELE0~ELE1 combined for proximity detection enabled
+
+  0b10 - Run Mode with ELE0~ELE3 combined for proximity detection enabled
+
+  0b11 - Run Mode with ELE0~ELE11 (all 12 channels) combined for the single
+    proximity detection channel enabled
+
   See https://www.nxp.com/docs/en/application-note/AN3893.pdf
   */
   proximity-mode mode/int -> none:
@@ -453,15 +457,15 @@ class Mpr121:
   Sets Configuration Lock register.
 
   Values:
-  - 0 Baseline tracking enable (Default). The baseline values updates every {ESI
+  0 = Baseline tracking enable (Default). The baseline values updates every {ESI
     x SFI} period by MPR121 per baseline filter operation. The initial value is
     ????.
-  - 1 Calibration lock. Baseline tracking disabled. Baseline values are
+  1 = Calibration lock. Baseline tracking disabled. Baseline values are
     unchanged by MPR121.
-  - 2 Baseline tracking and initialize enable. At the first {ESI x SFI}, MPR121
+  2 = Baseline tracking and initialize enable. At the first {ESI x SFI}, MPR121
     copy 5MSBs of the 2nd filter output to 10bit baseline value (5LSBs become
     zero.  Subsequent update is per nominal baseline filter operation.
-  - 3 Baseline tracking and initialize enable. At the first {ESI x SFI}, MPR121
+  3 = Baseline tracking and initialize enable. At the first {ESI x SFI}, MPR121
     copy the 2nd filter output to 10bit baseline value. Subsequent update is per
     nominal baseline filter operation.
   */
