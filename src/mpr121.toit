@@ -34,12 +34,7 @@ class Mpr121:
   static I2C-ADDRESS-5d    ::= 0x5d
 
   static PHYSICAL-CHANNELS ::= 12
-  static CHANNELS ::= 13
-
-  static PROXIMITY-MODE-DISABLED        := 0 // Default set by this driver.
-  static PROXIMITY-MODE-COMBINE-0-TO-1  := 1
-  static PROXIMITY-MODE-COMBINE-0-TO-3  := 2
-  static PROXIMITY-MODE-COMBINE-0-TO-11 := 3
+  static ALL-CHANNELS ::= 13
 
   static BASELINE-TRACKING-DISABLED   := 0x01
   static BASELINE-TRACKING-INIT-0     := 0x00 // Default in chipset.
@@ -131,9 +126,8 @@ class Mpr121:
   // Debounce settings.
   static REG-DEBOUNCE_            ::= 0x5B
   static DEBOUNCE-RELEASE-MASK_   ::= 0b0111_0000
-  static DEBOUNCE-RELEASE-OFFSET_ ::= 4
   static DEBOUNCE-TOUCH-MASK_     ::= 0b0000_0111
-  static DEBOUNCE-TOUCH-OFFSET_   ::= 0
+
 
   // Channel charge-discharge CURRENTS.
   static REG-CDC0_                     ::= 0x5f
@@ -184,6 +178,12 @@ class Mpr121:
   static ECR-ELECTRODE-MASK_           ::= 0b0000_1111
   static ECR-PROXIMITY-MASK_           ::= 0b0011_0000
   static ECR-CONFIGURATION-LOCK-MASK_  ::= 0b1100_0000
+
+  // Set in register $ECR in $ECR-PROXIMITY-MASK_
+  static PROXIMITY-MODE-DISABLED        := 0b00 // Default set by this driver.
+  static PROXIMITY-MODE-COMBINE-0-TO-1  := 0b01
+  static PROXIMITY-MODE-COMBINE-0-TO-3  := 0b10
+  static PROXIMITY-MODE-COMBINE-0-TO-11 := 0b11
 
   static BASELINE-DATA-BIT-SHIFT_      ::= 2
 
@@ -248,7 +248,7 @@ class Mpr121:
 
     // Set baseline configuration
     BASELINE-CONFIGURATION-JANELIA_.keys.do:
-      reg_.write-u8 it BASELINE-CONFIGURATION-JANELIA_[it]
+      write-register_ it BASELINE-CONFIGURATION-JANELIA_[it]
 
     set-thresholds --touch=TOUCH-THRESHOLD-DEFAULT_ --release=RELEASE-THRESHOLD-DEFAULT_
 
@@ -256,13 +256,12 @@ class Mpr121:
     write-register_ REG-GPIO-EN_ 0
 
     // DEFAULT CONFIGURATION: enable X electrodes = start MPR121
-    // - CL Calibration Lock bits  : 0b10 = 5 bits for baseline tracking
-    // - ELEPROX_EN proximity bits : disabled
-    // - ELE_EN Electrode Enable   : amount of electrodes running (12)
-    // Thus:
-    initial-ecr-setting/int := 0b10000000 + 12
+    // CL Calibration Lock bits  : 0b10xxxxxx = 5 bits for baseline tracking
+    // ELEPROX_EN proximity bits : 0bxx00xxxx = Disabled
+    // ELE_EN Electrode Enable   : 0bxxxx1100 = 12 electrodes enabled
+    initial-ecr-setting := 0b10001100
     write-register_ REG-ECR_ initial-ecr-setting
-    logger_.debug "initialise-device_: Wrote REG-ECR_ with [$(bits-16_ initial-ecr-setting)]" --tags={"initial-ecr-setting" : initial-ecr-setting}
+    logger_.debug "device initialised" --tags={"initial-ecr-setting" : initial-ecr-setting}
 
     // Testing
     show-afe1-register
@@ -276,9 +275,8 @@ class Mpr121:
   */
   touch-pins-enabled --number-of-pins/int -> none:
     assert: 0 <= number-of-pins <= 12
-    old-value:= read-register_ REG-ECR_
-    write-register_ REG-ECR_ number-of-pins
-    logger_.debug "touch-pins-enabled enable pins $(number-of-pins) from=$(bits-16_ old-value) to=$(bits-16_ number-of-pins)" --tags={"pins-enabled" : number-of-pins}
+    write-register_ REG-ECR_ number-of-pins --mask=ECR-ELECTRODE-MASK_
+    logger_.debug "touch-pins-enabled" --tags={"pins-enabled" : number-of-pins,"$number-of-pins":"$number-of-pins"}
     sleep --ms=1
 
   /**
@@ -294,7 +292,9 @@ class Mpr121:
   AN3892 and MPR121 design guidelines.
    - touch: the touch threshold value from 0 to 255.
    - release: the release threshold from 0 to 255.
+
   For a specfic channel - higher values = less sensitive
+
   */
   set-thresholds --touch/int --release/int -> none:
     set-touch-threshold touch --channel=null
@@ -304,11 +304,11 @@ class Mpr121:
   Set the touch threshold for a channel.
 
   See $set-thresholds.
-  #TODO test for zero case
   */
+  // #TODO test for zero case
   set-touch-threshold threshold --channel/int?=null -> none:
     if channel == null:
-      PHYSICAL-CHANNELS.repeat:
+      ALL-CHANNELS.repeat:
         set-touch-threshold threshold --channel=(it)
     else:
       write-register_ (REG-TOUCH-THRESHOLD0_ + (2 * channel)) threshold
@@ -317,13 +317,12 @@ class Mpr121:
   Set the release threshold for a channel.
 
   See $set-thresholds.
-  #TODO test for zero case
   */
+  // #TODO measure and ensure release is greater than touch
+  // #TODO test for zero case
   set-release-threshold threshold --channel/int?=null -> none:
-    // #TODO measure and ensure release is greater than touch
-    // #TODO test for zero case
     if channel == null:
-      PHYSICAL-CHANNELS.repeat:
+      ALL-CHANNELS.repeat:
         set-release-threshold threshold --channel=(it)
     else:
       write-register_ (REG-RELEASE-THRESHOLD0_ + (2 * channel)) threshold
@@ -357,7 +356,7 @@ class Mpr121:
     return (value << BASELINE-DATA-BIT-SHIFT_)
 
   /**
-  Reads the touch status of all 13 channels as bit values in a 12 bit integer.
+  Reads the touch status of all 13 channels as a bit mask.
 
   Returns a 12 bit integer with each bit corresponding to the touch status of a
    sensor channel. For example, if bit 5 is equal to 1, then that channel of
@@ -365,17 +364,17 @@ class Mpr121:
   */
   touched -> int:
     value := reg_.read-u16-le REG-TOUCH-STATUS_
-    output := value & 0x0FFF
+    output := value & TOUCH-STATUS-MASK-BASE_
     return output
 
-  stop-all-channels_ -> none:
-    raw := reg_.read-u8 REG-ECR_
-    last-ecr-register_ = raw
+  stop-all-channels -> none:
+    last-ecr-register_ = reg_.read-u8 REG-ECR_
+    logger_.debug "stop all channels" --tags={"register-backup": "$(bits-16_ last-ecr-register_)"}
     write-register_ REG-ECR_ 0x0
 
-  start-all-channels_ -> none:
+  start-all-channels -> none:
     write-register_ REG-ECR_ last-ecr-register_
-    logger_.debug "Write REG-ECR_ restored to 0x$(%02x last-ecr-register_) [$(bits-16_ last-ecr-register_)]"
+    logger_.debug "start all channels" --tags={"register-restore": "$(bits-16_ last-ecr-register_)"}
 
   /**
   Clears the 'overcurrent' flag.
@@ -383,8 +382,8 @@ class Mpr121:
   When over current detected, the OVCF bit 0b1000_0000 is set on the pin status
    register, and MPR121 goes to Stop Mode immediately. The ExTS bits in status
    registers,output registers 0x04~0x2A, and bit D5~D0 in ECR will be also
-   cleared on over current condition. When the bit is “1”, writing ECR register
-   (to try to enter Run mode) will be discarded.  Write “1” to OVCF will clear
+   cleared on over current condition. When the bit is "1", writing ECR register
+   (to try to enter Run mode) will be discarded.  Write "1" to OVCF will clear
    this bit and MPR121 fault condition is cleared so that MPR121 can be
    configured into Run Mode again.
   */
@@ -441,7 +440,9 @@ class Mpr121:
   */
   proximity-mode mode/int -> none:
     assert: 0 <= mode <= 3
+    stop-all-channels
     write-register_ REG-ECR_ mode --mask=ECR-PROXIMITY-MASK_
+    start-all-channels
 
   /**
   Sets Configuration Lock register.
@@ -650,7 +651,7 @@ class Mpr121:
     return  (old-DAT-reg-value & (1 << pin - 4))
 
   /** other GPIO functions:
-      Writing “1” into the corresponding bits of GPIO Data Set Register, GPIO Data Clear Register, and GPIO Data Toggle Register will set/clear/toggle contents of the corresponding DAT bit in Data Register.  These functions are reproduced here.  (Writing “0” has no meaning.)  These registers allow any individual port(s) to be set, cleared, or toggled individually without affecting other ports. It is important to note that reading these registers returns the contents of the GPIO Data Register reading.
+      Writing "1" into the corresponding bits of GPIO Data Set Register, GPIO Data Clear Register, and GPIO Data Toggle Register will set/clear/toggle contents of the corresponding DAT bit in Data Register.  These functions are reproduced here.  (Writing "0" has no meaning.)  These registers allow any individual port(s) to be set, cleared, or toggled individually without affecting other ports. It is important to note that reading these registers returns the contents of the GPIO Data Register reading.
       */
   set-gpio-pin --pin/int --set -> none:
     old-SET-reg-value := reg_.read-u8 GPIO-SET-REGISTER-ADDRESS_
@@ -962,7 +963,7 @@ class Mpr121Events:
       logger_.debug "interrupt tripped" --tags={"pressed":"$(%12b pressed)", "released":"$(%12b released)"}
 
       // Fire callbacks per channel.
-      Mpr121.PHYSICAL-CHANNELS.repeat: | i |
+      Mpr121.ALL-CHANNELS.repeat: | i |
         bit := 1 << i
         if (pressed & bit) != 0:
           // Copy the list in case callbacks register/unregister during execution.

@@ -5,7 +5,7 @@
 import gpio
 import i2c
 import log
-import mpr121 as mpr121
+import mpr121 show *
 
 /**
 Example starts I2C and connects to the MPR121.  Device starts a debugging task
@@ -49,7 +49,11 @@ main:
     print "No MPR121 device found [0x$(%02x I2C-ADDRESS)]"
   else:
     mpr121-device := bus.device I2C-ADDRESS
-    mpr121-driver := mpr121.Mpr121 mpr121-device
+    mpr121-driver := Mpr121 mpr121-device
 
-    // Enable simple touch debugging:
+    // Set Proximity for combining channels 0-3
+    mpr121-driver.proximity-mode Mpr121.PROXIMITY-MODE-COMBINE-0-TO-3
+
+    // Enable simple touch debugging - note CHANNEL-13 is proximity channel
+    // and channels 0 to 3 do not respond:
     mpr121-driver.debug-touched
