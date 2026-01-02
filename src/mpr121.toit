@@ -952,7 +952,7 @@ class Mpr121Events:
     // Stop the runner.
     if running:
       runner-task_.cancel
-      logger_.debug "runner stopped"
+      logger_.debug "event handler stopped"
       return
     logger_.debug "already stopped"
 
@@ -995,7 +995,7 @@ class Mpr121Events:
   wait-for-touch_ -> none:
     touch-mask-prev/int := 0
     touch-mask-new/int := 0
-    logger_.debug "runner started"
+    logger_.debug "event handler started"
 
     while true:
       // Wait for interrupt.
