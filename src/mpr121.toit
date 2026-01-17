@@ -699,12 +699,12 @@ class Mpr121:
     logger_.debug "toggle-gpio-pin  toggle  pin $(pin) OUTPUT from=$(bits-16_ old-TOG-reg-value) to=$(bits-16_ new-TOG-reg-value)"
 */
 
-  read-register_
+  read-register_ -> int
       register/int
       --mask/int?=null
       --offset/int?=null
       --width/int=DEFAULT-REGISTER-WIDTH_
-      --signed/bool=false -> any:
+      --signed/bool=false:
     assert: (width == 8) or (width == 16)
     if mask == null:
       mask = (width == 16) ? 0xFFFF : 0xFF
@@ -733,13 +733,13 @@ class Mpr121:
       masked-value := (register-value & mask) >> offset
       return masked-value
 
-  write-register_
+  write-register_ -> none
       register/int
-      value/any
+      value/int
       --mask/int?=null
       --offset/int?=null
       --width/int=DEFAULT-REGISTER-WIDTH_
-      --signed/bool=false -> none:
+      --signed/bool=false:
     assert: (width == 8) or (width == 16)
     if mask == null:
       mask = (width == 16) ? 0xFFFF : 0xFF
@@ -753,9 +753,9 @@ class Mpr121:
     if ((width == 8)  and (mask == 0xFF)  and (offset == 0)) or
       ((width == 16) and (mask == 0xFFFF) and (offset == 0)):
       if width == 8:
-        signed ? reg_.write-i8 register (value & 0xFF) : reg_.write-u8 register (value & 0xFF)
+        signed ? reg_.write-i8 register value : reg_.write-u8 register value
       else:
-        signed ? reg_.write-i16-be register (value & 0xFFFF) : reg_.write-u16-be register (value & 0xFFFF)
+        signed ? reg_.write-i16-be register value : reg_.write-u16-be register value
       return
 
     // Read Reg for modification
@@ -784,7 +784,6 @@ class Mpr121:
       signed ? reg_.write-i16-be register new-value : reg_.write-u16-be register new-value
       return
 
-    throw "write-register_: Unhandled Circumstance."
 
   /**
   Provides strings to display bitmasks nicely when testing.
