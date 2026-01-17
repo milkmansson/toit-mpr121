@@ -519,15 +519,15 @@ class Mpr121:
     write-register_ REG-FILTER-GLOBAL-CDT_ FILTER-GLOBAL-CDT-DEFAULT_
 
 
-  /** charge-discharge-current: Sets individual Charge Discharge Current per
-  channel if Global value is not used.
+  /**
+  Set individual Charge Discharge Current per channel (if Global value is not used).
 
-  The Individual Charge Discharge Current field selects the supply current
-  to be used when charging and discharging a specific channel. Programmable
-  in 1uA steps, up to 64uA.  When the CDCx is zero, the global value is
-  used.  If auto configuration is enabled and run once, the individual CDC
-  will be automatically updated by MPR121 internally after autoconfiguration
-  is finished.
+  The Individual Charge Discharge Current field selects the supply current to be
+    used when charging and discharging a specific channel. Programmable in 1uA
+    steps, up to 64uA.  When the CDCx is zero, the global value is used.  If
+    auto configuration is enabled and run once, the individual CDC will be
+    automatically updated by MPR121 internally after autoconfiguration is
+    finished.
   */
   channel-charge-discharge-current --channel/int -> int:
     assert: 0 <= channel <= 12
@@ -545,7 +545,7 @@ class Mpr121:
   Sets the charge time applied to each channel.
 
   Similar to the global CDT value, the range is 0~32 μS, from 0b000-0b111  When
-   the CDTx is zero, the global CDT value is used for that channel.
+    the CDTx is zero, the global CDT value is used for that channel.
   */
   set-channel-charge-discharge-time time/int --channel/int -> none:
     // 3 bits are held for 12 channels, across 6 registers, two channels per register, with one bit unused.
