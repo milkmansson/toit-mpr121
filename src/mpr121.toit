@@ -519,15 +519,15 @@ class Mpr121:
     write-register_ REG-FILTER-GLOBAL-CDT_ FILTER-GLOBAL-CDT-DEFAULT_
 
 
-  /** charge-discharge-current: Sets individual Charge Discharge Current per
-  channel if Global value is not used.
+  /**
+  Set individual Charge Discharge Current per channel (if Global value is not used).
 
-  The Individual Charge Discharge Current field selects the supply current
-  to be used when charging and discharging a specific channel. Programmable
-  in 1uA steps, up to 64uA.  When the CDCx is zero, the global value is
-  used.  If auto configuration is enabled and run once, the individual CDC
-  will be automatically updated by MPR121 internally after autoconfiguration
-  is finished.
+  The Individual Charge Discharge Current field selects the supply current to be
+    used when charging and discharging a specific channel. Programmable in 1uA
+    steps, up to 64uA.  When the CDCx is zero, the global value is used.  If
+    auto configuration is enabled and run once, the individual CDC will be
+    automatically updated by MPR121 internally after autoconfiguration is
+    finished.
   */
   channel-charge-discharge-current --channel/int -> int:
     assert: 0 <= channel <= 12
@@ -545,7 +545,7 @@ class Mpr121:
   Sets the charge time applied to each channel.
 
   Similar to the global CDT value, the range is 0~32 μS, from 0b000-0b111  When
-   the CDTx is zero, the global CDT value is used for that channel.
+    the CDTx is zero, the global CDT value is used for that channel.
   */
   set-channel-charge-discharge-time time/int --channel/int -> none:
     // 3 bits are held for 12 channels, across 6 registers, two channels per register, with one bit unused.
@@ -699,12 +699,12 @@ class Mpr121:
     logger_.debug "toggle-gpio-pin  toggle  pin $(pin) OUTPUT from=$(bits-16_ old-TOG-reg-value) to=$(bits-16_ new-TOG-reg-value)"
 */
 
-  read-register_
+  read-register_ -> int
       register/int
       --mask/int?=null
       --offset/int?=null
       --width/int=DEFAULT-REGISTER-WIDTH_
-      --signed/bool=false -> any:
+      --signed/bool=false:
     assert: (width == 8) or (width == 16)
     if mask == null:
       mask = (width == 16) ? 0xFFFF : 0xFF
@@ -733,13 +733,13 @@ class Mpr121:
       masked-value := (register-value & mask) >> offset
       return masked-value
 
-  write-register_
+  write-register_ -> none
       register/int
-      value/any
+      value/int
       --mask/int?=null
       --offset/int?=null
       --width/int=DEFAULT-REGISTER-WIDTH_
-      --signed/bool=false -> none:
+      --signed/bool=false:
     assert: (width == 8) or (width == 16)
     if mask == null:
       mask = (width == 16) ? 0xFFFF : 0xFF
@@ -753,9 +753,9 @@ class Mpr121:
     if ((width == 8)  and (mask == 0xFF)  and (offset == 0)) or
       ((width == 16) and (mask == 0xFFFF) and (offset == 0)):
       if width == 8:
-        signed ? reg_.write-i8 register (value & 0xFF) : reg_.write-u8 register (value & 0xFF)
+        signed ? reg_.write-i8 register value : reg_.write-u8 register value
       else:
-        signed ? reg_.write-i16-be register (value & 0xFFFF) : reg_.write-u16-be register (value & 0xFFFF)
+        signed ? reg_.write-i16-be register value : reg_.write-u16-be register value
       return
 
     // Read Reg for modification
@@ -784,7 +784,6 @@ class Mpr121:
       signed ? reg_.write-i16-be register new-value : reg_.write-u16-be register new-value
       return
 
-    throw "write-register_: Unhandled Circumstance."
 
   /**
   Provides strings to display bitmasks nicely when testing.
@@ -952,7 +951,7 @@ class Mpr121Events:
     // Stop the runner.
     if running:
       runner-task_.cancel
-      logger_.debug "runner stopped"
+      logger_.debug "event handler stopped"
       return
     logger_.debug "already stopped"
 
@@ -995,7 +994,7 @@ class Mpr121Events:
   wait-for-touch_ -> none:
     touch-mask-prev/int := 0
     touch-mask-new/int := 0
-    logger_.debug "runner started"
+    logger_.debug "event handler started"
 
     while true:
       // Wait for interrupt.
