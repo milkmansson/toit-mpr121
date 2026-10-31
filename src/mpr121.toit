@@ -24,10 +24,8 @@ Datasheet: https://www.nxp.com/docs/en/data-sheet/MPR121.pdf
 */
 
 class Mpr121:
-  // Device can be configured between 0x58..0x5d.
-  static I2C-ADDRESS       ::= 0x58
-  static I2C-ADDRESS-58    ::= 0x58
-  static I2C-ADDRESS-59    ::= 0x59
+  // Device address is selectable between 0x5a..0x5d using the ADDR pin.
+  static I2C-ADDRESS       ::= 0x5a
   static I2C-ADDRESS-5a    ::= 0x5a
   static I2C-ADDRESS-5b    ::= 0x5b
   static I2C-ADDRESS-5c    ::= 0x5c
@@ -36,48 +34,48 @@ class Mpr121:
   static PHYSICAL-CHANNELS ::= 12
   static ALL-CHANNELS ::= 13
 
-  static BASELINE-TRACKING-DISABLED   := 0x01
-  static BASELINE-TRACKING-INIT-0     := 0x00 // Default in chipset.
-  static BASELINE-TRACKING-INIT-5BIT  := 0x02
-  static BASELINE-TRACKING-INIT-10BIT := 0x03
+  static BASELINE-TRACKING-DISABLED   ::= 0x01
+  static BASELINE-TRACKING-INIT-0     ::= 0x00 // Default in chipset.
+  static BASELINE-TRACKING-INIT-5BIT  ::= 0x02
+  static BASELINE-TRACKING-INIT-10BIT ::= 0x03
 
-  static CHARGE-DISCHARGE-TIME-DISABLED := 0x00
-  static CHARGE-DISCHARGE-TIME-HALF-US  := 0x01 // Default.
-  static CHARGE-DISCHARGE-TIME-1US      := 0x02
-  static CHARGE-DISCHARGE-TIME-2US      := 0x03
-  static CHARGE-DISCHARGE-TIME-4US      := 0x04
-  static CHARGE-DISCHARGE-TIME-8US      := 0x05
-  static CHARGE-DISCHARGE-TIME-16US     := 0x06
-  static CHARGE-DISCHARGE-TIME-32US     := 0x07
+  static CHARGE-DISCHARGE-TIME-DISABLED ::= 0x00
+  static CHARGE-DISCHARGE-TIME-HALF-US  ::= 0x01 // Default.
+  static CHARGE-DISCHARGE-TIME-1US      ::= 0x02
+  static CHARGE-DISCHARGE-TIME-2US      ::= 0x03
+  static CHARGE-DISCHARGE-TIME-4US      ::= 0x04
+  static CHARGE-DISCHARGE-TIME-8US      ::= 0x05
+  static CHARGE-DISCHARGE-TIME-16US     ::= 0x06
+  static CHARGE-DISCHARGE-TIME-32US     ::= 0x07
 
-  static FIRST-FILTER-ITERATIONS-6  := 0x00 // Default.
-  static FIRST-FILTER-ITERATIONS-10 := 0x01
-  static FIRST-FILTER-ITERATIONS-18 := 0x02
-  static FIRST-FILTER-ITERATIONS-34 := 0x03
+  static FIRST-FILTER-ITERATIONS-6  ::= 0x00 // Default.
+  static FIRST-FILTER-ITERATIONS-10 ::= 0x01
+  static FIRST-FILTER-ITERATIONS-18 ::= 0x02
+  static FIRST-FILTER-ITERATIONS-34 ::= 0x03
 
-  static SECOND-FILTER-ITERATIONS-4  := 0x00 // Default.
-  static SECOND-FILTER-ITERATIONS-6  := 0x01
-  static SECOND-FILTER-ITERATIONS-10 := 0x02
-  static SECOND-FILTER-ITERATIONS-18 := 0x03
+  static SECOND-FILTER-ITERATIONS-4  ::= 0x00 // Default.
+  static SECOND-FILTER-ITERATIONS-6  ::= 0x01
+  static SECOND-FILTER-ITERATIONS-10 ::= 0x02
+  static SECOND-FILTER-ITERATIONS-18 ::= 0x03
 
   /**
   Sample periods of the MPR121 - the time between capacitive readings.
     Higher values consume less power, but are less responsive.
   */
-  static SAMPLE-PERIOD-1MS   := 0x00
-  static SAMPLE-PERIOD-2MS   := 0x01
-  static SAMPLE-PERIOD-4MS   := 0x02
-  static SAMPLE-PERIOD-8MS   := 0x03
-  static SAMPLE-PERIOD-16MS  := 0x04 // Default.
-  static SAMPLE-PERIOD-32MS  := 0x05
-  static SAMPLE-PERIOD-64MS  := 0x06
-  static SAMPLE-PERIOD-128MS := 0x07
+  static SAMPLE-PERIOD-1MS   ::= 0x00
+  static SAMPLE-PERIOD-2MS   ::= 0x01
+  static SAMPLE-PERIOD-4MS   ::= 0x02
+  static SAMPLE-PERIOD-8MS   ::= 0x03
+  static SAMPLE-PERIOD-16MS  ::= 0x04 // Default.
+  static SAMPLE-PERIOD-32MS  ::= 0x05
+  static SAMPLE-PERIOD-64MS  ::= 0x06
+  static SAMPLE-PERIOD-128MS ::= 0x07
 
   // Register addresses.
-  static REG-TOUCH-STATUS_        := 0x00  // = Low, high = 0x01
-  static REG-OUT-OF-RANGE-STATUS_ := 0x02
-  static REG-FILTERED-DATA0_      := 0x04  // = Low, high = 0x05
-  static REG-BASELINE-DATA0_      := 0x1e
+  static REG-TOUCH-STATUS_        ::= 0x00  // = Low, high = 0x01
+  static REG-OUT-OF-RANGE-STATUS_ ::= 0x02
+  static REG-FILTERED-DATA0_      ::= 0x04  // = Low, high = 0x05
+  static REG-BASELINE-DATA0_      ::= 0x1e
 
   // General electrode touch sense baseline filters.
 
@@ -140,7 +138,23 @@ class Mpr121:
   static CDT-FIELD-DIVISOR_    ::= 2
   static CDT-FIELD-OFFSET_     ::= 4
 
-  // GPIO
+  // GPIO is available on ELE4..ELE11.
+  static GPIO-FIRST-PIN ::= 4
+  static GPIO-LAST-PIN  ::= 11
+
+  /** GPIO mode: input. */
+  static GPIO-INPUT                         ::= 0
+  /** GPIO mode: input with internal pull-down. */
+  static GPIO-INPUT-PULL-DOWN               ::= 1
+  /** GPIO mode: input with internal pull-up. */
+  static GPIO-INPUT-PULL-UP                 ::= 2
+  /** GPIO mode: CMOS (push-pull) output. */
+  static GPIO-OUTPUT                        ::= 3
+  /** GPIO mode: high-side only open-drain output, for driving an LED. */
+  static GPIO-OUTPUT-OPEN-DRAIN-HIGH-SIDE   ::= 4
+  /** GPIO mode: low-side only open-drain output. */
+  static GPIO-OUTPUT-OPEN-DRAIN-LOW-SIDE    ::= 5
+
   static REG-GPIO-CTL0_ ::= 0x73
   static REG-GPIO-CTL1_ ::= 0x74
   static REG-GPIO-DAT_  ::= 0x75
@@ -180,15 +194,15 @@ class Mpr121:
   static ECR-CONFIGURATION-LOCK-MASK_  ::= 0b11000000
 
   // Set in register $ECR in $ECR-PROXIMITY-MASK_
-  static PROXIMITY-MODE-DISABLED        := 0b00 // Default set by this driver.
-  static PROXIMITY-MODE-COMBINE-0-TO-1  := 0b01
-  static PROXIMITY-MODE-COMBINE-0-TO-3  := 0b10
-  static PROXIMITY-MODE-COMBINE-0-TO-11 := 0b11
+  static PROXIMITY-MODE-DISABLED        ::= 0b00 // Default set by this driver.
+  static PROXIMITY-MODE-COMBINE-0-TO-1  ::= 0b01
+  static PROXIMITY-MODE-COMBINE-0-TO-3  ::= 0b10
+  static PROXIMITY-MODE-COMBINE-0-TO-11 ::= 0b11
 
   static BASELINE-DATA-BIT-SHIFT_      ::= 2
 
   // Other Statics.
-  static OVER-CURRENT-REXT_         ::= 0b1000_0000_0000_0000
+  static OVER-CURRENT-REXT_         ::= 0b1000_0000  // OVCF: bit 7 of REG-TOUCH-STATUS_ + 1.
   static TOUCH-STATUS-MASK-BASE_    ::= 0x1FFF
   static OUT-OF-RANGE-STATUS-ACFF_  ::= 0x8000
   static OUT-OF-RANGE-STATUS-ARFF_  ::= 0x4000
@@ -305,12 +319,16 @@ class Mpr121:
   See $set-thresholds.
   */
   // #TODO test for zero case
-  set-touch-threshold threshold --channel/int?=null -> none:
+  set-touch-threshold threshold/int --channel/int?=null -> none:
+    assert: 0 <= threshold <= 255
     if channel == null:
-      ALL-CHANNELS.repeat:
-        set-touch-threshold threshold --channel=(it)
+      with-stop-mode_:
+        ALL-CHANNELS.repeat:
+          set-touch-threshold threshold --channel=(it)
     else:
-      write-register_ (REG-TOUCH-THRESHOLD0_ + (2 * channel)) threshold
+      assert: 0 <= channel < ALL-CHANNELS
+      with-stop-mode_:
+        write-register_ (REG-TOUCH-THRESHOLD0_ + (2 * channel)) threshold
 
   /**
   Set the release threshold for a channel.
@@ -319,12 +337,16 @@ class Mpr121:
   */
   // #TODO measure and ensure release is greater than touch
   // #TODO test for zero case
-  set-release-threshold threshold --channel/int?=null -> none:
+  set-release-threshold threshold/int --channel/int?=null -> none:
+    assert: 0 <= threshold <= 255
     if channel == null:
-      ALL-CHANNELS.repeat:
-        set-release-threshold threshold --channel=(it)
+      with-stop-mode_:
+        ALL-CHANNELS.repeat:
+          set-release-threshold threshold --channel=(it)
     else:
-      write-register_ (REG-RELEASE-THRESHOLD0_ + (2 * channel)) threshold
+      assert: 0 <= channel < ALL-CHANNELS
+      with-stop-mode_:
+        write-register_ (REG-RELEASE-THRESHOLD0_ + (2 * channel)) threshold
 
   soft-reset -> none:
     write-register_ REG-SOFT-RESET_ SOFT-RESET-VALUE_
@@ -339,8 +361,9 @@ class Mpr121:
     filtered reading, as a 10 bit unsigned value.
   */
   read-filtered-channel-data --channel -> int:
-    if (channel > 12): return 0
-    return reg_.read-u16-le (REG-FILTERED-DATA0_ + (channel * 2))
+    if not 0 <= channel < ALL-CHANNELS: return 0
+    // Little endian: low byte at the even address, bits 9..8 in the high byte.
+    return (reg_.read-u16-le (REG-FILTERED-DATA0_ + (channel * 2))) & 0x3FF
 
   /**
   Returns the baseline value for the channel.
@@ -350,14 +373,14 @@ class Mpr121:
     channel.
   */
   read-baseline-channel-data --channel -> int:
-    if (channel > 12): return 0
+    if not 0 <= channel < ALL-CHANNELS: return 0
     value := reg_.read-u8 (REG-BASELINE-DATA0_ + channel)
     return (value << BASELINE-DATA-BIT-SHIFT_)
 
   /**
   Reads the touch status of all 13 channels as a bit mask.
 
-  Returns a 12 bit integer with each bit corresponding to the touch status of a
+  Returns a 13 bit integer (bit 12 is the proximity channel) with each bit corresponding to the touch status of a
     sensor channel. For example, if bit 5 is equal to 1, then that channel of
     the device is currently deemed to be touched.
   */
@@ -378,8 +401,17 @@ class Mpr121:
     configured into Run Mode again.
   */
   clear-overcurrent-flag -> none:
-    reg_.write-u16-le REG-TOUCH-STATUS_ OVER-CURRENT-REXT_
-    write-register_ REG-TOUCH-STATUS_ OVER-CURRENT-REXT_
+    // OVCF is bit 7 of the second status register (0x01).
+    reg_.write-u8 (REG-TOUCH-STATUS_ + 1) OVER-CURRENT-REXT_
+
+  /**
+  Whether the over-current flag (OVCF) is set.
+
+  See $clear-overcurrent-flag.  The device stays in Stop Mode until it is
+    cleared and Run Mode is configured again.
+  */
+  is-overcurrent -> bool:
+    return ((reg_.read-u8 (REG-TOUCH-STATUS_ + 1)) & OVER-CURRENT-REXT_) != 0
 
   // looks like it will set the bit of the channel of the out of range status
   get-out-of-range-status -> int:
@@ -387,11 +419,13 @@ class Mpr121:
     logger_.debug "get-out-of-range-status: returned 0x$(%02x value) [$(bits-16_ value)]"
     return value
 
-  auto-config-failed --out-of-range-status/int -> int:
-    return get-out-of-range-status & OUT-OF-RANGE-STATUS-ACFF_
+  /** Whether autoconfiguration failed (ACFF).  Reads the status unless supplied. */
+  auto-config-failed --out-of-range-status/int=get-out-of-range-status -> bool:
+    return (out-of-range-status & OUT-OF-RANGE-STATUS-ACFF_) != 0
 
-  auto-reconfig-failed --out-of-range-status/int -> int:
-    return get-out-of-range-status & OUT-OF-RANGE-STATUS-ARFF_
+  /** Whether auto-reconfiguration failed (ARFF).  Reads the status unless supplied. */
+  auto-reconfig-failed --out-of-range-status/int=get-out-of-range-status -> bool:
+    return (out-of-range-status & OUT-OF-RANGE-STATUS-ARFF_) != 0
 
   /**
   Sets release debounce on all channels for the device.
@@ -403,7 +437,8 @@ class Mpr121:
   */
   set-release-debounce release/int -> none:
     assert: 0 <= release <= 7
-    write-register_ REG-DEBOUNCE_ release --mask=DEBOUNCE-RELEASE-MASK_
+    with-stop-mode_:
+      write-register_ REG-DEBOUNCE_ release --mask=DEBOUNCE-RELEASE-MASK_
 
   /**
   Sets touch debounce on all channels for the device.
@@ -412,7 +447,8 @@ class Mpr121:
   */
   set-touch-debounce touch/int -> none:
     assert: 0 <= touch <= 7
-    write-register_ REG-DEBOUNCE_ touch --mask=DEBOUNCE-TOUCH-MASK_
+    with-stop-mode_:
+      write-register_ REG-DEBOUNCE_ touch --mask=DEBOUNCE-TOUCH-MASK_
 
   /**
   Sets the number of channels to consumed for virtual "13th" proximity
@@ -444,9 +480,29 @@ class Mpr121:
     logger_.info "set proximity mode" --tags={"mode":"$mode"}
 
   stop-mode -> none:
-    last-ecr-register_ = read-register_ REG-ECR_
+    // Only remember a running configuration - calling this twice must not
+    // overwrite the saved value with zero.
+    current-ecr := read-register_ REG-ECR_
+    if current-ecr != 0: last-ecr-register_ = current-ecr
     write-register_ REG-ECR_ 0
     logger_.debug "stop mode"
+
+  /**
+  Runs the $block with the device in Stop Mode, restoring the previous run
+    configuration afterwards.
+
+  The datasheet only allows writes to registers 0x2B..0x7F (other than the ECR
+    and GPIO registers) in Stop Mode; writes made in Run Mode are ignored.  If the
+    device is already stopped, nothing is changed.  Re-entering Run Mode also
+    re-runs autoconfiguration (if enabled) and baseline initialisation.
+  */
+  with-stop-mode_ [block] -> none:
+    ecr := read-register_ REG-ECR_
+    if ecr != 0: write-register_ REG-ECR_ 0
+    try:
+      block.call
+    finally:
+      if ecr != 0: write-register_ REG-ECR_ ecr
 
   run-mode --replace-enable-bits=last-ecr-register_ -> none:
     write-register_ REG-ECR_ replace-enable-bits
@@ -459,7 +515,7 @@ class Mpr121:
   Values:
   0 = Baseline tracking enable (Default). The baseline values updates every {ESI
     x SFI} period by MPR121 per baseline filter operation. The initial value is
-    ????.
+    the current value of the baseline value register.
   1 = Calibration lock. Baseline tracking disabled. Baseline values are
     unchanged by MPR121.
   2 = Baseline tracking and initialize enable. At the first {ESI x SFI}, MPR121
@@ -478,45 +534,44 @@ class Mpr121:
 
   When enabled, the MPR121 automatically searches and sets the charging
    parameters for every enabled pad. This happens on each time the MPR121
-   transitions from Stop Mode to Run Mode.
-  */
-  set-autoconfig_ --autoconfig/bool -> none:
-    // register map at
-    // https://www.nxp.com/docs/en/data-sheet/MPR121.pdf#page=17&zoom=auto,-416,747
-    if autoconfig:
-      // recommend settings found at
-      // https://www.nxp.com/docs/en/application-note/AN3889.pdf#page=9&zoom=310,-42,373
-      // FFI (First Filter Iterations) same as FFI in CONFIG1
-      // FFI           → 00 Sets samples taken to 6 (Default)
-      // RETRY
-      // RETRY
-      // BVA same as CL in ECR
-      // BVA same as CL in ECR
-      // ARE Auto-Reconfiguration Enable
-      // ACE Auto-Configuration Enable
-      // 0x0B == 0b00001011
-      write-register_ REG-ACCR0_ 0b00001011
-      logger_.debug "Wrote REG-ACCR0_ with    0x$(%04x 0b00001011) [$(bits-16_ 0b00001011)]"
+   transitions from Stop Mode to Run Mode, so this method briefly stops and
+   restarts the device to run it now.
 
-      // details on values
-      // https://www.nxp.com/docs/en/application-note/AN3889.pdf#page=7&zoom=310,-42,792
-      // correct values for Vdd = 3.3V
-      //reg_.write-u8 USL-REGISTER-ADDRESS_ 200                 // ((Vdd - 0.7)/Vdd) * 256
-      write-register_ REG-USL_ 200     // ((Vdd - 0.7)/Vdd) * 256
-      write-register_ REG-TL_  180     // UPLIMIT * 0.9
-      write-register_ REG-LSL_ 130     // UPLIMIT * 0.65
-    else:
-      // really only disable ACE.
-      write-register_ REG-ACCR0_ 0b00001010
-      logger_.debug "Wrote REG-ACCR0_ with    0x$(%04x 0b00001010) [$(bits-16_ 0b00001010)]"
+  The search limits depend on the supply voltage $vdd (volts): USL = (Vdd - 0.7)
+   / Vdd x 256, TL = USL x 0.9 and LSL = USL x 0.65.  See datasheet equations 1
+   to 3, and application note AN3889.
+  */
+  set-autoconfig --autoconfig/bool --vdd/float=3.3 -> none:
+    // BVA (bits 3:2) must match CL in the ECR.  Read it before stopping, or use
+    // the saved value if the device is already stopped.
+    ecr := read-register_ REG-ECR_
+    if ecr == 0: ecr = last-ecr-register_
+    with-stop-mode_:
+      if autoconfig:
+        // FFI (bits 7:6) must match FFI in 0x5C.
+        ffi := (read-register_ REG-FILTER-GLOBAL-CDC_) >> 6
+        bva := ecr >> 6
+        // RETRY = 0b00; ARE (bit 1) and ACE (bit 0) enabled.
+        accr0 := (ffi << 6) | (bva << 2) | 0b11
+        write-register_ REG-ACCR0_ accr0
+        logger_.debug "Wrote REG-ACCR0_ with    0x$(%04x accr0) [$(bits-16_ accr0)]"
+
+        usl := (((vdd - 0.7) / vdd) * 256.0).to-int
+        write-register_ REG-USL_ usl
+        write-register_ REG-TL_  (usl * 0.9).to-int
+        write-register_ REG-LSL_ (usl * 0.65).to-int
+      else:
+        // Disable both ACE and ARE.
+        write-register_ REG-ACCR0_ 0
+        logger_.debug "Wrote REG-ACCR0_ with    0x0000"
 
   afe1-register-reset -> none:
-    value := read-register_ REG-FILTER-GLOBAL-CDC_
-    write-register_ REG-FILTER-GLOBAL-CDC_ FILTER-GLOBAL-CDC-DEFAULT_
+    with-stop-mode_:
+      write-register_ REG-FILTER-GLOBAL-CDC_ FILTER-GLOBAL-CDC-DEFAULT_
 
   afe2-register-reset -> none:
-    value := reg_.read-u8 REG-FILTER-GLOBAL-CDT_
-    write-register_ REG-FILTER-GLOBAL-CDT_ FILTER-GLOBAL-CDT-DEFAULT_
+    with-stop-mode_:
+      write-register_ REG-FILTER-GLOBAL-CDT_ FILTER-GLOBAL-CDT-DEFAULT_
 
 
   /**
@@ -531,14 +586,13 @@ class Mpr121:
   */
   channel-charge-discharge-current --channel/int -> int:
     assert: 0 <= channel <= 12
-    value := read-register_ (REG-CDC0_ + channel)
-    return value
+    return read-register_ (REG-CDC0_ + channel) --mask=0x3F
 
   channel-charge-discharge-current --channel/int --current/int -> none:
     assert: 0 <= channel <= 12
     assert: 0 <= current <= CHARGE-DISCHARGE-CURRENT-MAX_
-    value := read-register_ (REG-CDC0_ + channel)
-    write-register_ (REG-CDC0_ + channel) current
+    with-stop-mode_:
+      write-register_ (REG-CDC0_ + channel) current
     logger_.debug "channel-charge-discharge-current: channel$(channel) register=$(bits-16_ (REG-CDC0_ + channel)) value=$(current)"
 
   /**
@@ -553,151 +607,101 @@ class Mpr121:
     assert: 0 <= channel <= 12
     register := REG-CDT0_ + (channel / CDT-FIELD-DIVISOR_)
     shift    := (CDT-FIELD-OFFSET_ * (channel % CDT-FIELD-DIVISOR_))
-    write-register_ register time --mask=CDT-CHARGE-TIME-MASK_ --offset=shift
+    with-stop-mode_:
+      write-register_ register time --mask=(CDT-CHARGE-TIME-MASK_ << shift)
 
   get-channel-charge-discharge-time --channel/int -> int:
+    assert: 0 <= channel <= 12
     // 3 bits are held for 12 channels, across 6 registers, two channels per register, with one bit unused.
     register := REG-CDT0_ + (channel / CDT-FIELD-DIVISOR_)
     shift     := (CDT-FIELD-OFFSET_ * (channel % CDT-FIELD-DIVISOR_))
-    return read-register_ register --mask=CDT-CHARGE-TIME-MASK_ --offset=shift
+    return read-register_ register --mask=(CDT-CHARGE-TIME-MASK_ << shift)
 
-
-/*
-  gpio-pin-function --pin/int --disable -> none:
-    assert: 4 <= pin <= 11
-    old-value := reg_.read-u8 GPIO-EN-REGISTER-ADDRESS_
-    new-value       := (old-value &  ~(1 << pin - 4)) & 0xFF
-    reg_.write-u8 GPIO-EN-REGISTER-ADDRESS_ new-value
-    logger_.debug "gpio-pin-function  disable pin $(pin) from=$(bits-16_ old-value) to=$(bits-16_ new-value)"
-    sleep --ms=1
-
-  gpio-pin-function --pin/int --enable --input -> none:
-    assert: 4 <= pin <= 11
-    old-EN-reg-value := reg_.read-u8 GPIO-EN-REGISTER-ADDRESS_
-    new-EN-reg-value := (old-EN-reg-value |  (1 << pin - 4)) & 0xFF                 //0 in EN
-    reg_.write-u8 GPIO-EN-REGISTER-ADDRESS_ new-EN-reg-value
-    logger_.debug "gpio-pin-function  enable  pin $(pin) INPUT from=$(bits-16_ old-EN-reg-value) to=$(bits-16_ new-EN-reg-value)"
-    old-CTL0-reg-value := reg_.read-u8 GPIO-CTL0-REGISTER-ADDRESS_
-    old-CTL1-reg-value := reg_.read-u8 GPIO-CTL1-REGISTER-ADDRESS_
-    new-CTL0-reg-value := (old-CTL0-reg-value &  ~(1 << pin - 4)) & 0xFF            //0 in CTL0
-    new-CTL1-reg-value := (old-CTL1-reg-value &  ~(1 << pin - 4)) & 0xFF            //0 in CTL1
-    reg_.write-u8 GPIO-CTL0-REGISTER-ADDRESS_ new-CTL0-reg-value
-    reg_.write-u8 GPIO-CTL1-REGISTER-ADDRESS_ new-CTL1-reg-value
-    old-DIR-reg-value := reg_.read-u8 GPIO-DIR-REGISTER-ADDRESS_
-    new-DIR-reg-value := (old-DIR-reg-value &  ~(1 << pin - 4)) & 0xFF              //0 in DIR
-    reg_.write-u8 GPIO-DIR-REGISTER-ADDRESS_ new-DIR-reg-value
-    sleep --ms=1
-
-  gpio-pin-function --pin/int --enable --input --pulldown -> none:
-    assert: 4 <= pin <= 11
-    gpio-pin-function --pin=pin --enable --input
-    old-CTL0-reg-value := reg_.read-u8 GPIO-CTL0-REGISTER-ADDRESS_
-    old-CTL1-reg-value := reg_.read-u8 GPIO-CTL1-REGISTER-ADDRESS_
-    new-CTL0-reg-value := (old-CTL0-reg-value |  (1 << pin - 4)) & 0xFF             //1 in CTL0
-    new-CTL1-reg-value := (old-CTL1-reg-value &  ~(1 << pin - 4)) & 0xFF            //0 in CTL1
-    reg_.write-u8 GPIO-CTL0-REGISTER-ADDRESS_ new-CTL0-reg-value
-    reg_.write-u8 GPIO-CTL1-REGISTER-ADDRESS_ new-CTL1-reg-value
-    logger_.debug "gpio-pin-function  enable internal pulldown on pin $(pin)" // from=$(bits-16_ old-value) to=$(bits-16_ new-value)"
-    sleep --ms=1
-
-  gpio-pin-function --pin/int --enable --input --pullup -> none:
-    assert: 4 <= pin <= 11
-    gpio-pin-function --pin=pin --enable --input
-    old-CTL0-reg-value := reg_.read-u8 GPIO-CTL0-REGISTER-ADDRESS_
-    old-CTL1-reg-value := reg_.read-u8 GPIO-CTL1-REGISTER-ADDRESS_
-    new-CTL0-reg-value := (old-CTL0-reg-value |  (1 << pin - 4)) & 0xFF             //1 in CTL0
-    new-CTL1-reg-value := (old-CTL1-reg-value |  (1 << pin - 4)) & 0xFF             //1 in CTL1
-    reg_.write-u8 GPIO-CTL0-REGISTER-ADDRESS_ new-CTL0-reg-value
-    reg_.write-u8 GPIO-CTL1-REGISTER-ADDRESS_ new-CTL1-reg-value
-    logger_.debug "gpio-pin-function  enable internal pullup on pin $(pin)" // from=$(bits-16_ old-value) to=$(bits-16_ new-value)"
-    sleep --ms=1
-
-  gpio-pin-function --pin/int --enable --output -> none:
-    assert: 4 <= pin <= 11
-    old-EN-reg-value := reg_.read-u8 GPIO-EN-REGISTER-ADDRESS_
-    new-EN-reg-value := (old-EN-reg-value |  (1 << pin - 4)) & 0xFF                 //0 in EN
-    reg_.write-u8 GPIO-EN-REGISTER-ADDRESS_ new-EN-reg-value
-    logger_.debug "gpio-pin-function  enable  pin $(pin) OUTPUT from=$(bits-16_ old-EN-reg-value) to=$(bits-16_ new-EN-reg-value)"
-    old-CTL0-reg-value := reg_.read-u8 GPIO-CTL0-REGISTER-ADDRESS_
-    old-CTL1-reg-value := reg_.read-u8 GPIO-CTL1-REGISTER-ADDRESS_
-    new-CTL0-reg-value := (old-CTL0-reg-value &  ~(1 << pin - 4)) & 0xFF            //0 in CTL0
-    new-CTL1-reg-value := (old-CTL1-reg-value &  ~(1 << pin - 4)) & 0xFF            //0 in CTL1
-    reg_.write-u8 GPIO-CTL0-REGISTER-ADDRESS_ new-CTL0-reg-value
-    reg_.write-u8 GPIO-CTL1-REGISTER-ADDRESS_ new-CTL1-reg-value
-    old-DIR-reg-value := reg_.read-u8 GPIO-DIR-REGISTER-ADDRESS_
-    new-DIR-reg-value := (old-DIR-reg-value  |  (1 << pin - 4)) & 0xFF              //1 in DIR
-    sleep --ms=1
-
-  gpio-pin-function --pin/int --enable --output --hi-side-open-drain-led -> none:
-    assert: 4 <= pin <= 11
-    gpio-pin-function --pin=pin --enable --output
-    old-CTL0-reg-value := reg_.read-u8 GPIO-CTL0-REGISTER-ADDRESS_
-    old-CTL1-reg-value := reg_.read-u8 GPIO-CTL1-REGISTER-ADDRESS_
-    new-CTL0-reg-value := (old-CTL0-reg-value |  (1 << pin - 4)) & 0xFF             //1 in CTL0
-    new-CTL1-reg-value := (old-CTL1-reg-value |  (1 << pin - 4)) & 0xFF             //1 in CTL1
-    reg_.write-u8 GPIO-CTL0-REGISTER-ADDRESS_ new-CTL0-reg-value
-    reg_.write-u8 GPIO-CTL1-REGISTER-ADDRESS_ new-CTL1-reg-value
-    logger_.debug "gpio-pin-function  enable hi-side-open-drain-led on pin $(pin)" // from=$(bits-16_ old-value) to=$(bits-16_ new-value)"
-    sleep --ms=1
-
-  gpio-pin-function --pin/int --enable --output --lo-side-open-drain -> none:
-    assert: 4 <= pin <= 11
-    gpio-pin-function --pin=pin --enable --output
-    old-CTL0-reg-value := reg_.read-u8 GPIO-CTL0-REGISTER-ADDRESS_
-    old-CTL1-reg-value := reg_.read-u8 GPIO-CTL1-REGISTER-ADDRESS_
-    new-CTL0-reg-value := (old-CTL0-reg-value |  (1 << pin - 4)) & 0xFF             //1 in CTL0
-    new-CTL1-reg-value := (old-CTL1-reg-value &  ~(1 << pin - 4)) & 0xFF            //0 in CTL1
-    reg_.write-u8 GPIO-CTL0-REGISTER-ADDRESS_ new-CTL0-reg-value
-    reg_.write-u8 GPIO-CTL1-REGISTER-ADDRESS_ new-CTL1-reg-value
-    logger_.debug "gpio-pin-function  enable lo-side-open-drain on pin $(pin)" // from=$(bits-16_ old-value) to=$(bits-16_ new-value)"
-    sleep --ms=1
 
   /**
-  Get-gpio-pin: returns DAT for the pin.
+  Configures a GPIO pin.
 
-  When a GPIO is enabled as an output, the GPIO port outputs the corresponding
-    DAT bit level from GPIO Data Register (0x075). The output level toggle remains
-    on during any electrode charging. The level transition will occur after the
-    ADC conversion takes place. It is important to note that reading this register
-    returns the content of the GPIO Data Register, (not a level of the port). When
-    a GPIO is configured as input, reading this register returns the latched input
-    level of the corresponding port (not contents of the GPIO Data Register).
-    Writing to the DAT changes content of the register, but does not effect the
-    input function
+  Only ELE4..ELE11 can be used as GPIO, so $pin is 4 to 11.  The ECR has higher
+    priority than the GPIO registers, so a pin that is still enabled as a touch
+    electrode cannot be used: use $touch-pins-enabled first to reduce the number
+    of electrodes to $pin or fewer.  Electrodes are always enabled from ELE0
+    upwards, so the highest numbered pins are the first to become available.
+
+  $mode is one of the GPIO-* statics.  The GPIO registers can be written in Run
+    Mode, so the device does not need to be stopped.
   */
-  get-gpio-pin --pin/int --get -> int:
-    old-DAT-reg-value := reg_.read-u8 GPIO-DAT-REGISTER-ADDRESS_
-    return  (old-DAT-reg-value & (1 << pin - 4))
+  gpio-configure pin/int mode/int -> none:
+    assert: GPIO-FIRST-PIN <= pin <= GPIO-LAST-PIN
+    assert: GPIO-INPUT <= mode <= GPIO-OUTPUT-OPEN-DRAIN-LOW-SIDE
+    electrodes := min (read-register_ REG-ECR_ --mask=ECR-ELECTRODE-MASK_) PHYSICAL-CHANNELS
+    if pin < electrodes:
+      throw "MPR121 pin $pin is enabled as a touch electrode: use touch-pins-enabled --number-of-pins=$pin (or fewer) first"
+
+    // CTL0:CTL1 and DIR per the datasheet's GPIO function table.
+    ctl0 := 0
+    ctl1 := 0
+    dir  := 0
+    if mode == GPIO-INPUT-PULL-DOWN:
+      ctl0 = 1
+    else if mode == GPIO-INPUT-PULL-UP:
+      ctl0 = 1
+      ctl1 = 1
+    else if mode == GPIO-OUTPUT:
+      dir = 1
+    else if mode == GPIO-OUTPUT-OPEN-DRAIN-HIGH-SIDE:
+      dir = 1
+      ctl0 = 1
+      ctl1 = 1
+    else if mode == GPIO-OUTPUT-OPEN-DRAIN-LOW-SIDE:
+      dir = 1
+      ctl0 = 1
+
+    // Enable last, so the pin does not glitch while being configured.
+    bit := 1 << (pin - GPIO-FIRST-PIN)
+    update-bit_ REG-GPIO-CTL0_ bit ctl0
+    update-bit_ REG-GPIO-CTL1_ bit ctl1
+    update-bit_ REG-GPIO-DIR_ bit dir
+    update-bit_ REG-GPIO-EN_ bit 1
+    logger_.debug "gpio-configure" --tags={"pin": pin, "mode": mode}
 
   /**
-  Other GPIO functions:
-
-  Writing "1" into the corresponding bits of GPIO Data Set Register, GPIO Data
-    Clear Register, and GPIO Data Toggle Register will set/clear/toggle contents
-    of the corresponding DAT bit in Data Register.  These functions are
-    reproduced here.  (Writing "0" has no meaning.)  These registers allow any
-    individual port(s) to be set, cleared, or toggled individually without
-    affecting other ports. It is important to note that reading these registers
-    returns the contents of the GPIO Data Register reading.
+  Disables the GPIO function of $pin, leaving it in a high impedance state.
   */
-  set-gpio-pin --pin/int --set -> none:
-    old-SET-reg-value := reg_.read-u8 GPIO-SET-REGISTER-ADDRESS_
-    new-SET-reg-value := (old-SET-reg-value |  (1 << pin - 4))                //1 in SET
-    reg_.write-u8 GPIO-SET-REGISTER-ADDRESS_ new-SET-reg-value
-    logger_.debug "set-gpio-pin  set  pin $(pin) OUTPUT from=$(bits-16_ old-SET-reg-value) to=$(bits-16_ new-SET-reg-value)"
+  gpio-disable pin/int -> none:
+    assert: GPIO-FIRST-PIN <= pin <= GPIO-LAST-PIN
+    update-bit_ REG-GPIO-EN_ (1 << (pin - GPIO-FIRST-PIN)) 0
 
-  clear-gpio-pin --pin/int --clear -> none:
-    old-CLR-reg-value := reg_.read-u8 GPIO-CLR-REGISTER-ADDRESS_
-    new-CLR-reg-value := (old-CLR-reg-value |  (1 << pin - 4))                //1 in CLR
-    reg_.write-u8 GPIO-CLR-REGISTER-ADDRESS_ new-CLR-reg-value
-    logger_.debug "clear-gpio-pin  clear  pin $(pin) OUTPUT from=$(bits-16_ old-CLR-reg-value) to=$(bits-16_ new-CLR-reg-value)"
+  /**
+  Returns the level (0 or 1) of the GPIO $pin.
 
-  toggle-gpio-pin --pin/int --toggle -> none:
-    old-TOG-reg-value := reg_.read-u8 GPIO-TOG-REGISTER-ADDRESS_
-    new-TOG-reg-value := (old-TOG-reg-value |  (1 << pin - 4))                //1 in TOG
-    reg_.write-u8 GPIO-TOG-REGISTER-ADDRESS_ new-TOG-reg-value
-    logger_.debug "toggle-gpio-pin  toggle  pin $(pin) OUTPUT from=$(bits-16_ old-TOG-reg-value) to=$(bits-16_ new-TOG-reg-value)"
-*/
+  For an input this is the latched input level.  For an output, reading returns
+    the contents of the GPIO Data Register, not the level on the pin.
+  */
+  gpio-get pin/int -> int:
+    assert: GPIO-FIRST-PIN <= pin <= GPIO-LAST-PIN
+    return ((reg_.read-u8 REG-GPIO-DAT_) >> (pin - GPIO-FIRST-PIN)) & 1
+
+  /**
+  Sets the output level (0 or 1) of the GPIO $pin.
+
+  The set and clear registers only act on bits written as 1, and leave other
+    pins alone, so they are written directly and never read-modify-written.
+  */
+  gpio-set pin/int value/int -> none:
+    assert: GPIO-FIRST-PIN <= pin <= GPIO-LAST-PIN
+    assert: value == 0 or value == 1
+    bit := 1 << (pin - GPIO-FIRST-PIN)
+    reg_.write-u8 (value == 1 ? REG-GPIO-SET_ : REG-GPIO-CLR_) bit
+
+  /** Toggles the output level of the GPIO $pin. */
+  gpio-toggle pin/int -> none:
+    assert: GPIO-FIRST-PIN <= pin <= GPIO-LAST-PIN
+    reg_.write-u8 REG-GPIO-TOG_ (1 << (pin - GPIO-FIRST-PIN))
+
+  update-bit_ register/int bit/int value/int -> none:
+    old := reg_.read-u8 register
+    reg_.write-u8 register (value == 1 ? (old | bit) : (old & ~bit))
+
 
   read-register_ -> int
       register/int
@@ -867,6 +871,65 @@ class Mpr121:
     return logger_
 
 /**
+A single MPR121 GPIO pin (ELE4..ELE11), with an interface modelled on gpio.Pin.
+
+Every operation is an I2C transaction to the MPR121, so this is only suitable
+  for slow digital I/O such as LEDs, buttons and control lines.  See the README
+  for why these pins cannot be used for buses such as I2C or SPI.
+*/
+class Mpr121Pin:
+  driver_/Mpr121
+  pin/int
+
+  /** Creates the pin.  The pin is not configured until $configure is called. */
+  constructor driver/Mpr121 .pin/int:
+    driver_ = driver
+    assert: Mpr121.GPIO-FIRST-PIN <= pin <= Mpr121.GPIO-LAST-PIN
+
+  /**
+  Configures the pin, as gpio.Pin does.
+
+  Exactly one of $input and $output must be set.  $pull-up and $pull-down apply
+    to inputs.  For outputs, $open-drain gives a low-side only open-drain output,
+    and $led gives the high-side only open-drain output for driving an LED.  An
+    optional $value sets the initial output level.
+  */
+  configure --input/bool=false --output/bool=false --pull-up/bool=false --pull-down/bool=false --open-drain/bool=false --led/bool=false --value/int?=null -> none:
+    if input == output: throw "INVALID_ARGUMENT: exactly one of --input and --output"
+    if pull-up and pull-down: throw "INVALID_ARGUMENT: --pull-up and --pull-down"
+    if output and (pull-up or pull-down): throw "INVALID_ARGUMENT: pulls apply to inputs only"
+    if input and (open-drain or led or value != null): throw "INVALID_ARGUMENT: output options on an input"
+    if open-drain and led: throw "INVALID_ARGUMENT: --open-drain and --led"
+
+    mode := Mpr121.GPIO-INPUT
+    if input:
+      if pull-up: mode = Mpr121.GPIO-INPUT-PULL-UP
+      else if pull-down: mode = Mpr121.GPIO-INPUT-PULL-DOWN
+    else:
+      mode = Mpr121.GPIO-OUTPUT
+      if open-drain: mode = Mpr121.GPIO-OUTPUT-OPEN-DRAIN-LOW-SIDE
+      else if led: mode = Mpr121.GPIO-OUTPUT-OPEN-DRAIN-HIGH-SIDE
+      // The data register works while the pin is disabled, so set the level first.
+      if value != null: driver_.gpio-set pin value
+    driver_.gpio-configure pin mode
+
+  /** Returns the pin level, 0 or 1.  See $Mpr121.gpio-get. */
+  get -> int:
+    return driver_.gpio-get pin
+
+  /** Sets the output level to $value, 0 or 1. */
+  set value/int -> none:
+    driver_.gpio-set pin value
+
+  /** Toggles the output level. */
+  toggle -> none:
+    driver_.gpio-toggle pin
+
+  /** Disables the pin, leaving it high impedance. */
+  close -> none:
+    driver_.gpio-disable pin
+
+/**
 Class to contain and handle blocks being used as callbacks.
 */
 class Mpr121Events:
@@ -928,13 +991,13 @@ class Mpr121Events:
 
   /** Removes touch lambdas/callbacks for a specified pin. */
   stop-on-touch-callbacks channel/int -> none:
-    assert: 0 < channel < 0xFFF
+    assert: 0 < channel < 0x2000
     if touch-callback-tasks_.contains channel and not touch-callback-tasks_[channel].is-canceled:
       touch-callback-tasks_[channel].cancel
 
   /** Removes release lambdas/callbacks for a specified pin. */
   stop-on-release-callbacks channel/int -> none:
-    assert: 0 < channel < 0xFFF
+    assert: 0 < channel < 0x2000
     if release-callback-tasks_.contains channel and not release-callback-tasks_[channel].is-canceled:
       release-callback-tasks_[channel].cancel
 
@@ -957,13 +1020,13 @@ class Mpr121Events:
 
   /** Stores a lambda for the $channel pin.  */
   on-touch channel/int --callback/Lambda -> none:
-    assert: 0 < channel < 0xFFF
+    assert: 0 < channel < 0x2000
     touch-callbacks_[channel] = callback
     logger_.debug "on-touch set" --tags={"channel":"$(channel)"}
 
   /** Stores a lambda for releasing the $channel pin. */
   on-release channel/int --callback/Lambda -> none:
-    assert: 0 < channel < 0xFFF
+    assert: 0 < channel < 0x2000
     release-callbacks_[channel] = callback
     logger_.debug "on-release set" --tags={"channel":"$(channel)"}
 
@@ -972,17 +1035,17 @@ class Mpr121Events:
     remove-on-release channel
 
   remove-on-touch channel/int -> none:
-    assert: 0 < channel < 0xFFF
+    assert: 0 < channel < 0x2000
     stop-on-touch-callbacks channel
     if touch-callbacks_.contains channel:
-      touch-callbacks_.remove [channel]
+      touch-callbacks_.remove channel
       logger_.debug "on-touch removed" --tags={"channel":"$(channel)"}
 
   remove-on-release channel/int -> none:
-    assert: 0 < channel < 0xFFF
+    assert: 0 < channel < 0x2000
     stop-on-release-callbacks channel
     if release-callbacks_.contains channel:
-      release-callbacks_.remove [channel]
+      release-callbacks_.remove channel
       logger_.debug "on-release removed" --tags={"channel":"$(channel)"}
 
   /**

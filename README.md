@@ -24,7 +24,7 @@ applied to the sensing inputs.
   This uses a number of the original pins, combining them to increase sensitivity
   to make a proximity sensor.  This is a virtual 13th channel.
 
-- GPIO and LED Driver function (Not yet implemented.)
+- GPIO and LED Driver function
 
   Among the 12 electrode inputs, 8 inputs are designed as multifunctional pins (D0 - D7 bits in the register correspond to GPIO and LED functions on ELE4 - ELE11). When these pins are not configured as electrodes, they may be used to drive LEDs or used for general purpose input or output. For more details on this feature, please refer to application note [AN3894](https://www.nxp.com/docs/en/application-note/AN3894.pdf).
 
@@ -33,15 +33,38 @@ applied to the sensing inputs.
   Note: Be aware that the channels/electrodes cannot be turned on or off without following the 'total number of touch channels enabled' sequence.  This means that using the first 6 channels for touch and wanting to use the second channel for GPIO, won't work.  This means that using the higher end channels for GPIO might need to be done first, and then to start reducing the number of channels for touch one by one.
 
 
+  The driver provides `gpio-configure`, `gpio-get`, `gpio-set`, `gpio-toggle` and
+  `gpio-disable` on `Mpr121`, and a small `Mpr121Pin` class with an interface
+  modelled on `gpio.Pin`.  See [this example](./examples/gpio-led.toit).
+
+  **GPIO is for basic digital I/O only** (LEDs, buttons, enable/reset/chip-select
+  lines).  These pins cannot sensibly be used as a bus such as I2C or SPI:
+  - _Speed_: every pin change is an I2C transaction to the MPR121.  A bit-banged
+    I2C byte needs dozens of pin operations, so expect tens of milliseconds per
+    byte and a clock in the tens of hertz.
+  - _Timeouts_: SMBus-style devices time out if SCL stays low for about 25-35 ms,
+    so many devices would misbehave at that speed.
+  - _Reading SDA_: for an output pin, reading the data register returns the
+    register contents, not the level on the pin.  Reading SDA means switching
+    the pin to an input and back, adding more transactions for every bit.
+  - _Open-drain_: the low-side open-drain mode can pull a line low and release it
+    to an external pull-up, but clock stretching cannot be detected.
+  - _Pin count_: only 8 pins (ELE4..ELE11) are available, and each one used costs
+    a touch electrode, because the ECR overrides GPIO for any pin that is also an
+    electrode.
+
+  For a real bus, use spare pins on the microcontroller, or add an I2C mux or a
+  proper GPIO expander.
+
 ### Package Features
 - Most functions specified in the datasheet are featured in the driver, `Mpr121`.
 - 'Callback'/Event handler feature has been added, `Mpr121Events`.
+- GPIO and LED driver (on/off) functions, `Mpr121Pin`.
 
 ### Not Yet Implemented
 - Combinations (eg, hold 3, and tap 4)
 - Proximity feature hasn't been implemented in `Mpr121Events`
-- GPIO function has not been implemented.
-- LED driver function has not yet been implemented.
+- LED brightness (PWM) control is not implemented.
 
 ## Examples
 
