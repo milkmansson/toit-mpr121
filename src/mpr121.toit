@@ -138,7 +138,23 @@ class Mpr121:
   static CDT-FIELD-DIVISOR_    ::= 2
   static CDT-FIELD-OFFSET_     ::= 4
 
-  // GPIO
+  // GPIO is available on ELE4..ELE11.
+  static GPIO-FIRST-PIN ::= 4
+  static GPIO-LAST-PIN  ::= 11
+
+  /** GPIO mode: input. */
+  static GPIO-INPUT                         ::= 0
+  /** GPIO mode: input with internal pull-down. */
+  static GPIO-INPUT-PULL-DOWN               ::= 1
+  /** GPIO mode: input with internal pull-up. */
+  static GPIO-INPUT-PULL-UP                 ::= 2
+  /** GPIO mode: CMOS (push-pull) output. */
+  static GPIO-OUTPUT                        ::= 3
+  /** GPIO mode: high-side only open-drain output, for driving an LED. */
+  static GPIO-OUTPUT-OPEN-DRAIN-HIGH-SIDE   ::= 4
+  /** GPIO mode: low-side only open-drain output. */
+  static GPIO-OUTPUT-OPEN-DRAIN-LOW-SIDE    ::= 5
+
   static REG-GPIO-CTL0_ ::= 0x73
   static REG-GPIO-CTL1_ ::= 0x74
   static REG-GPIO-DAT_  ::= 0x75
@@ -602,142 +618,90 @@ class Mpr121:
     return read-register_ register --mask=(CDT-CHARGE-TIME-MASK_ << shift)
 
 
-/*
-  gpio-pin-function --pin/int --disable -> none:
-    assert: 4 <= pin <= 11
-    old-value := reg_.read-u8 GPIO-EN-REGISTER-ADDRESS_
-    new-value       := (old-value &  ~(1 << pin - 4)) & 0xFF
-    reg_.write-u8 GPIO-EN-REGISTER-ADDRESS_ new-value
-    logger_.debug "gpio-pin-function  disable pin $(pin) from=$(bits-16_ old-value) to=$(bits-16_ new-value)"
-    sleep --ms=1
+  /**
+  Configures a GPIO pin.
 
-  gpio-pin-function --pin/int --enable --input -> none:
-    assert: 4 <= pin <= 11
-    old-EN-reg-value := reg_.read-u8 GPIO-EN-REGISTER-ADDRESS_
-    new-EN-reg-value := (old-EN-reg-value |  (1 << pin - 4)) & 0xFF                 //0 in EN
-    reg_.write-u8 GPIO-EN-REGISTER-ADDRESS_ new-EN-reg-value
-    logger_.debug "gpio-pin-function  enable  pin $(pin) INPUT from=$(bits-16_ old-EN-reg-value) to=$(bits-16_ new-EN-reg-value)"
-    old-CTL0-reg-value := reg_.read-u8 GPIO-CTL0-REGISTER-ADDRESS_
-    old-CTL1-reg-value := reg_.read-u8 GPIO-CTL1-REGISTER-ADDRESS_
-    new-CTL0-reg-value := (old-CTL0-reg-value &  ~(1 << pin - 4)) & 0xFF            //0 in CTL0
-    new-CTL1-reg-value := (old-CTL1-reg-value &  ~(1 << pin - 4)) & 0xFF            //0 in CTL1
-    reg_.write-u8 GPIO-CTL0-REGISTER-ADDRESS_ new-CTL0-reg-value
-    reg_.write-u8 GPIO-CTL1-REGISTER-ADDRESS_ new-CTL1-reg-value
-    old-DIR-reg-value := reg_.read-u8 GPIO-DIR-REGISTER-ADDRESS_
-    new-DIR-reg-value := (old-DIR-reg-value &  ~(1 << pin - 4)) & 0xFF              //0 in DIR
-    reg_.write-u8 GPIO-DIR-REGISTER-ADDRESS_ new-DIR-reg-value
-    sleep --ms=1
+  Only ELE4..ELE11 can be used as GPIO, so $pin is 4 to 11.  The ECR has higher
+    priority than the GPIO registers, so a pin that is still enabled as a touch
+    electrode cannot be used: use $touch-pins-enabled first to reduce the number
+    of electrodes to $pin or fewer.  Electrodes are always enabled from ELE0
+    upwards, so the highest numbered pins are the first to become available.
 
-  gpio-pin-function --pin/int --enable --input --pulldown -> none:
-    assert: 4 <= pin <= 11
-    gpio-pin-function --pin=pin --enable --input
-    old-CTL0-reg-value := reg_.read-u8 GPIO-CTL0-REGISTER-ADDRESS_
-    old-CTL1-reg-value := reg_.read-u8 GPIO-CTL1-REGISTER-ADDRESS_
-    new-CTL0-reg-value := (old-CTL0-reg-value |  (1 << pin - 4)) & 0xFF             //1 in CTL0
-    new-CTL1-reg-value := (old-CTL1-reg-value &  ~(1 << pin - 4)) & 0xFF            //0 in CTL1
-    reg_.write-u8 GPIO-CTL0-REGISTER-ADDRESS_ new-CTL0-reg-value
-    reg_.write-u8 GPIO-CTL1-REGISTER-ADDRESS_ new-CTL1-reg-value
-    logger_.debug "gpio-pin-function  enable internal pulldown on pin $(pin)" // from=$(bits-16_ old-value) to=$(bits-16_ new-value)"
-    sleep --ms=1
+  $mode is one of the GPIO-* statics.  The GPIO registers can be written in Run
+    Mode, so the device does not need to be stopped.
+  */
+  gpio-configure pin/int mode/int -> none:
+    assert: GPIO-FIRST-PIN <= pin <= GPIO-LAST-PIN
+    assert: GPIO-INPUT <= mode <= GPIO-OUTPUT-OPEN-DRAIN-LOW-SIDE
+    electrodes := min (read-register_ REG-ECR_ --mask=ECR-ELECTRODE-MASK_) PHYSICAL-CHANNELS
+    if pin < electrodes:
+      throw "MPR121 pin $pin is enabled as a touch electrode: use touch-pins-enabled --number-of-pins=$pin (or fewer) first"
 
-  gpio-pin-function --pin/int --enable --input --pullup -> none:
-    assert: 4 <= pin <= 11
-    gpio-pin-function --pin=pin --enable --input
-    old-CTL0-reg-value := reg_.read-u8 GPIO-CTL0-REGISTER-ADDRESS_
-    old-CTL1-reg-value := reg_.read-u8 GPIO-CTL1-REGISTER-ADDRESS_
-    new-CTL0-reg-value := (old-CTL0-reg-value |  (1 << pin - 4)) & 0xFF             //1 in CTL0
-    new-CTL1-reg-value := (old-CTL1-reg-value |  (1 << pin - 4)) & 0xFF             //1 in CTL1
-    reg_.write-u8 GPIO-CTL0-REGISTER-ADDRESS_ new-CTL0-reg-value
-    reg_.write-u8 GPIO-CTL1-REGISTER-ADDRESS_ new-CTL1-reg-value
-    logger_.debug "gpio-pin-function  enable internal pullup on pin $(pin)" // from=$(bits-16_ old-value) to=$(bits-16_ new-value)"
-    sleep --ms=1
+    // CTL0:CTL1 and DIR per the datasheet's GPIO function table.
+    ctl0 := 0
+    ctl1 := 0
+    dir  := 0
+    if mode == GPIO-INPUT-PULL-DOWN:
+      ctl0 = 1
+    else if mode == GPIO-INPUT-PULL-UP:
+      ctl0 = 1
+      ctl1 = 1
+    else if mode == GPIO-OUTPUT:
+      dir = 1
+    else if mode == GPIO-OUTPUT-OPEN-DRAIN-HIGH-SIDE:
+      dir = 1
+      ctl0 = 1
+      ctl1 = 1
+    else if mode == GPIO-OUTPUT-OPEN-DRAIN-LOW-SIDE:
+      dir = 1
+      ctl0 = 1
 
-  gpio-pin-function --pin/int --enable --output -> none:
-    assert: 4 <= pin <= 11
-    old-EN-reg-value := reg_.read-u8 GPIO-EN-REGISTER-ADDRESS_
-    new-EN-reg-value := (old-EN-reg-value |  (1 << pin - 4)) & 0xFF                 //0 in EN
-    reg_.write-u8 GPIO-EN-REGISTER-ADDRESS_ new-EN-reg-value
-    logger_.debug "gpio-pin-function  enable  pin $(pin) OUTPUT from=$(bits-16_ old-EN-reg-value) to=$(bits-16_ new-EN-reg-value)"
-    old-CTL0-reg-value := reg_.read-u8 GPIO-CTL0-REGISTER-ADDRESS_
-    old-CTL1-reg-value := reg_.read-u8 GPIO-CTL1-REGISTER-ADDRESS_
-    new-CTL0-reg-value := (old-CTL0-reg-value &  ~(1 << pin - 4)) & 0xFF            //0 in CTL0
-    new-CTL1-reg-value := (old-CTL1-reg-value &  ~(1 << pin - 4)) & 0xFF            //0 in CTL1
-    reg_.write-u8 GPIO-CTL0-REGISTER-ADDRESS_ new-CTL0-reg-value
-    reg_.write-u8 GPIO-CTL1-REGISTER-ADDRESS_ new-CTL1-reg-value
-    old-DIR-reg-value := reg_.read-u8 GPIO-DIR-REGISTER-ADDRESS_
-    new-DIR-reg-value := (old-DIR-reg-value  |  (1 << pin - 4)) & 0xFF              //1 in DIR
-    sleep --ms=1
-
-  gpio-pin-function --pin/int --enable --output --hi-side-open-drain-led -> none:
-    assert: 4 <= pin <= 11
-    gpio-pin-function --pin=pin --enable --output
-    old-CTL0-reg-value := reg_.read-u8 GPIO-CTL0-REGISTER-ADDRESS_
-    old-CTL1-reg-value := reg_.read-u8 GPIO-CTL1-REGISTER-ADDRESS_
-    new-CTL0-reg-value := (old-CTL0-reg-value |  (1 << pin - 4)) & 0xFF             //1 in CTL0
-    new-CTL1-reg-value := (old-CTL1-reg-value |  (1 << pin - 4)) & 0xFF             //1 in CTL1
-    reg_.write-u8 GPIO-CTL0-REGISTER-ADDRESS_ new-CTL0-reg-value
-    reg_.write-u8 GPIO-CTL1-REGISTER-ADDRESS_ new-CTL1-reg-value
-    logger_.debug "gpio-pin-function  enable hi-side-open-drain-led on pin $(pin)" // from=$(bits-16_ old-value) to=$(bits-16_ new-value)"
-    sleep --ms=1
-
-  gpio-pin-function --pin/int --enable --output --lo-side-open-drain -> none:
-    assert: 4 <= pin <= 11
-    gpio-pin-function --pin=pin --enable --output
-    old-CTL0-reg-value := reg_.read-u8 GPIO-CTL0-REGISTER-ADDRESS_
-    old-CTL1-reg-value := reg_.read-u8 GPIO-CTL1-REGISTER-ADDRESS_
-    new-CTL0-reg-value := (old-CTL0-reg-value |  (1 << pin - 4)) & 0xFF             //1 in CTL0
-    new-CTL1-reg-value := (old-CTL1-reg-value &  ~(1 << pin - 4)) & 0xFF            //0 in CTL1
-    reg_.write-u8 GPIO-CTL0-REGISTER-ADDRESS_ new-CTL0-reg-value
-    reg_.write-u8 GPIO-CTL1-REGISTER-ADDRESS_ new-CTL1-reg-value
-    logger_.debug "gpio-pin-function  enable lo-side-open-drain on pin $(pin)" // from=$(bits-16_ old-value) to=$(bits-16_ new-value)"
-    sleep --ms=1
+    // Enable last, so the pin does not glitch while being configured.
+    bit := 1 << (pin - GPIO-FIRST-PIN)
+    update-bit_ REG-GPIO-CTL0_ bit ctl0
+    update-bit_ REG-GPIO-CTL1_ bit ctl1
+    update-bit_ REG-GPIO-DIR_ bit dir
+    update-bit_ REG-GPIO-EN_ bit 1
+    logger_.debug "gpio-configure" --tags={"pin": pin, "mode": mode}
 
   /**
-  Get-gpio-pin: returns DAT for the pin.
-
-  When a GPIO is enabled as an output, the GPIO port outputs the corresponding
-    DAT bit level from GPIO Data Register (0x075). The output level toggle remains
-    on during any electrode charging. The level transition will occur after the
-    ADC conversion takes place. It is important to note that reading this register
-    returns the content of the GPIO Data Register, (not a level of the port). When
-    a GPIO is configured as input, reading this register returns the latched input
-    level of the corresponding port (not contents of the GPIO Data Register).
-    Writing to the DAT changes content of the register, but does not effect the
-    input function
+  Disables the GPIO function of $pin, leaving it in a high impedance state.
   */
-  get-gpio-pin --pin/int --get -> int:
-    old-DAT-reg-value := reg_.read-u8 GPIO-DAT-REGISTER-ADDRESS_
-    return  (old-DAT-reg-value & (1 << pin - 4))
+  gpio-disable pin/int -> none:
+    assert: GPIO-FIRST-PIN <= pin <= GPIO-LAST-PIN
+    update-bit_ REG-GPIO-EN_ (1 << (pin - GPIO-FIRST-PIN)) 0
 
   /**
-  Other GPIO functions:
+  Returns the level (0 or 1) of the GPIO $pin.
 
-  Writing "1" into the corresponding bits of GPIO Data Set Register, GPIO Data
-    Clear Register, and GPIO Data Toggle Register will set/clear/toggle contents
-    of the corresponding DAT bit in Data Register.  These functions are
-    reproduced here.  (Writing "0" has no meaning.)  These registers allow any
-    individual port(s) to be set, cleared, or toggled individually without
-    affecting other ports. It is important to note that reading these registers
-    returns the contents of the GPIO Data Register reading.
+  For an input this is the latched input level.  For an output, reading returns
+    the contents of the GPIO Data Register, not the level on the pin.
   */
-  set-gpio-pin --pin/int --set -> none:
-    old-SET-reg-value := reg_.read-u8 GPIO-SET-REGISTER-ADDRESS_
-    new-SET-reg-value := (old-SET-reg-value |  (1 << pin - 4))                //1 in SET
-    reg_.write-u8 GPIO-SET-REGISTER-ADDRESS_ new-SET-reg-value
-    logger_.debug "set-gpio-pin  set  pin $(pin) OUTPUT from=$(bits-16_ old-SET-reg-value) to=$(bits-16_ new-SET-reg-value)"
+  gpio-get pin/int -> int:
+    assert: GPIO-FIRST-PIN <= pin <= GPIO-LAST-PIN
+    return ((reg_.read-u8 REG-GPIO-DAT_) >> (pin - GPIO-FIRST-PIN)) & 1
 
-  clear-gpio-pin --pin/int --clear -> none:
-    old-CLR-reg-value := reg_.read-u8 GPIO-CLR-REGISTER-ADDRESS_
-    new-CLR-reg-value := (old-CLR-reg-value |  (1 << pin - 4))                //1 in CLR
-    reg_.write-u8 GPIO-CLR-REGISTER-ADDRESS_ new-CLR-reg-value
-    logger_.debug "clear-gpio-pin  clear  pin $(pin) OUTPUT from=$(bits-16_ old-CLR-reg-value) to=$(bits-16_ new-CLR-reg-value)"
+  /**
+  Sets the output level (0 or 1) of the GPIO $pin.
 
-  toggle-gpio-pin --pin/int --toggle -> none:
-    old-TOG-reg-value := reg_.read-u8 GPIO-TOG-REGISTER-ADDRESS_
-    new-TOG-reg-value := (old-TOG-reg-value |  (1 << pin - 4))                //1 in TOG
-    reg_.write-u8 GPIO-TOG-REGISTER-ADDRESS_ new-TOG-reg-value
-    logger_.debug "toggle-gpio-pin  toggle  pin $(pin) OUTPUT from=$(bits-16_ old-TOG-reg-value) to=$(bits-16_ new-TOG-reg-value)"
-*/
+  The set and clear registers only act on bits written as 1, and leave other
+    pins alone, so they are written directly and never read-modify-written.
+  */
+  gpio-set pin/int value/int -> none:
+    assert: GPIO-FIRST-PIN <= pin <= GPIO-LAST-PIN
+    assert: value == 0 or value == 1
+    bit := 1 << (pin - GPIO-FIRST-PIN)
+    reg_.write-u8 (value == 1 ? REG-GPIO-SET_ : REG-GPIO-CLR_) bit
+
+  /** Toggles the output level of the GPIO $pin. */
+  gpio-toggle pin/int -> none:
+    assert: GPIO-FIRST-PIN <= pin <= GPIO-LAST-PIN
+    reg_.write-u8 REG-GPIO-TOG_ (1 << (pin - GPIO-FIRST-PIN))
+
+  update-bit_ register/int bit/int value/int -> none:
+    old := reg_.read-u8 register
+    reg_.write-u8 register (value == 1 ? (old | bit) : (old & ~bit))
+
 
   read-register_ -> int
       register/int
@@ -905,6 +869,65 @@ class Mpr121:
 
   logger -> log.Logger:
     return logger_
+
+/**
+A single MPR121 GPIO pin (ELE4..ELE11), with an interface modelled on gpio.Pin.
+
+Every operation is an I2C transaction to the MPR121, so this is only suitable
+  for slow digital I/O such as LEDs, buttons and control lines.  See the README
+  for why these pins cannot be used for buses such as I2C or SPI.
+*/
+class Mpr121Pin:
+  driver_/Mpr121
+  pin/int
+
+  /** Creates the pin.  The pin is not configured until $configure is called. */
+  constructor driver/Mpr121 .pin/int:
+    driver_ = driver
+    assert: Mpr121.GPIO-FIRST-PIN <= pin <= Mpr121.GPIO-LAST-PIN
+
+  /**
+  Configures the pin, as gpio.Pin does.
+
+  Exactly one of $input and $output must be set.  $pull-up and $pull-down apply
+    to inputs.  For outputs, $open-drain gives a low-side only open-drain output,
+    and $led gives the high-side only open-drain output for driving an LED.  An
+    optional $value sets the initial output level.
+  */
+  configure --input/bool=false --output/bool=false --pull-up/bool=false --pull-down/bool=false --open-drain/bool=false --led/bool=false --value/int?=null -> none:
+    if input == output: throw "INVALID_ARGUMENT: exactly one of --input and --output"
+    if pull-up and pull-down: throw "INVALID_ARGUMENT: --pull-up and --pull-down"
+    if output and (pull-up or pull-down): throw "INVALID_ARGUMENT: pulls apply to inputs only"
+    if input and (open-drain or led or value != null): throw "INVALID_ARGUMENT: output options on an input"
+    if open-drain and led: throw "INVALID_ARGUMENT: --open-drain and --led"
+
+    mode := Mpr121.GPIO-INPUT
+    if input:
+      if pull-up: mode = Mpr121.GPIO-INPUT-PULL-UP
+      else if pull-down: mode = Mpr121.GPIO-INPUT-PULL-DOWN
+    else:
+      mode = Mpr121.GPIO-OUTPUT
+      if open-drain: mode = Mpr121.GPIO-OUTPUT-OPEN-DRAIN-LOW-SIDE
+      else if led: mode = Mpr121.GPIO-OUTPUT-OPEN-DRAIN-HIGH-SIDE
+      // The data register works while the pin is disabled, so set the level first.
+      if value != null: driver_.gpio-set pin value
+    driver_.gpio-configure pin mode
+
+  /** Returns the pin level, 0 or 1.  See $Mpr121.gpio-get. */
+  get -> int:
+    return driver_.gpio-get pin
+
+  /** Sets the output level to $value, 0 or 1. */
+  set value/int -> none:
+    driver_.gpio-set pin value
+
+  /** Toggles the output level. */
+  toggle -> none:
+    driver_.gpio-toggle pin
+
+  /** Disables the pin, leaving it high impedance. */
+  close -> none:
+    driver_.gpio-disable pin
 
 /**
 Class to contain and handle blocks being used as callbacks.
